@@ -1,10 +1,7 @@
 {
-  "name": "yoga-ap",
-  "version": "1.0.0",
-  "description": "An Electron application with React and TypeScript",
+  "name": "yoga-app",
+  "version": "0.0.1",
   "main": "./out/main/index.js",
-  "author": "example.com",
-  "homepage": "https://electron-vite.org",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",

@@ -1,12 +1,9 @@
 import { HelpRounded, SearchRounded } from '@mui/icons-material'
 import {
   AppBar,
-  Card,
-  CardHeader,
   Container,
   Grid,
   InputAdornment,
-  Skeleton,
   Stack,
   TextField,
   Toolbar,
@@ -16,7 +13,6 @@ import {
 import { ExercisePreviewCard } from '@renderer/components/exercise-preview-card'
 import { createFileRoute } from '@tanstack/react-router'
 import { FC } from 'react'
-import { cursorTo } from 'readline'
 
 export const Route = createFileRoute('/')({
   component: RouteComponent
@@ -27,6 +23,7 @@ const Board: FC<{ difficulty: 'ADVANCED' | 'BASIC' | 'INTERMEDIATE' }> = (props)
     {Array.from({ length: 3 }).map((_, i) => (
       <Grid size={4} key={i}>
         <ExercisePreviewCard
+          exerciseId={'2e8e83e9-fcf2-40d2-aed0-dbbdf14b7704'}
           name={'EXERCISE ' + props.difficulty + i.toString().padStart(2, '0')}
           explanation={
             'lorem pharetra. Quisque volutpat facilisis pharetra. Donec eleifend mauris et tellus mattis dignissim in vehicula turpis. Morbi eu augue eget sapien aliquet lacinia eget tincidunt odio. Etiam malesuada rhoncus cursus. Suspendisse tempor bibendum hendrerit. Quisque interdum ligula et luctus fermentum. Sed molestie porta tortor, ut ullamcorper leo iaculis eget.  '

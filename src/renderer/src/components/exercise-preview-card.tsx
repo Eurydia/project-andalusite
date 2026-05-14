@@ -1,6 +1,11 @@
-import prettyMilliseconds from 'pretty-ms'
-import ReactPlayer from 'react-player'
+import {
+  KeyboardArrowLeftRounded,
+  OpenInNewRounded,
+  SelfImprovementRounded
+} from '@mui/icons-material'
 import Whatshot from '@mui/icons-material/Whatshot'
+import { Button, Toolbar } from '@mui/material'
+import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
 import CardActionArea from '@mui/material/CardActionArea'
 import CardHeader from '@mui/material/CardHeader'
@@ -10,19 +15,15 @@ import Dialog from '@mui/material/Dialog'
 import DialogContent from '@mui/material/DialogContent'
 import Grid from '@mui/material/Grid'
 import Stack from '@mui/material/Stack'
-import { FC, useCallback, useMemo, useState } from 'react'
 import Typography from '@mui/material/Typography'
-import Box from '@mui/material/Box'
+import prettyMilliseconds from 'pretty-ms'
+import { FC, useCallback, useMemo, useState } from 'react'
+import ReactPlayer from 'react-player'
 import { StyledRouterLink } from './styled-router-link'
-import { Button, Toolbar } from '@mui/material'
-import {
-  FitnessCenterRounded,
-  Flare,
-  OpenInNewRounded,
-  SelfImprovementRounded
-} from '@mui/icons-material'
+import { StyledRouterLinkButton } from './styled-router-link-button'
 
 export const ExercisePreviewCard: FC<{
+  exerciseId: string
   name: string
   explanation: string
   thumbnailSrc: string
@@ -92,7 +93,8 @@ export const ExercisePreviewCard: FC<{
               title: {
                 sx: {
                   overflowWrap: 'break-word',
-                  wordBreak: 'break-word'
+                  wordBreak: 'break-word',
+                  fontWeight: 700
                 }
               }
             }}
@@ -108,7 +110,7 @@ export const ExercisePreviewCard: FC<{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: (t) => t.palette.primary.light
+              backgroundColor: (t) => t.palette.primary.main
             }}
           >
             <Box
@@ -133,6 +135,14 @@ export const ExercisePreviewCard: FC<{
             <DialogContent>
               <Stack spacing={4}>
                 <Stack spacing={2} useFlexGap sx={{ alignItems: 'flex-start' }}>
+                  <Button
+                    disableTouchRipple
+                    variant="text"
+                    startIcon={<KeyboardArrowLeftRounded />}
+                    onClick={closeDialog}
+                  >
+                    {`Back`}
+                  </Button>
                   <Typography
                     variant="h2"
                     sx={{
@@ -147,10 +157,9 @@ export const ExercisePreviewCard: FC<{
                   >
                     {props.name}
                   </Typography>
-
                   <Stack
                     direction="row"
-                    spacing={2}
+                    spacing={1}
                     divider={<Typography color="textSecondary">{`\u2022`}</Typography>}
                     sx={{ flexWrap: 'wrap', alignItems: 'center' }}
                   >
@@ -164,7 +173,7 @@ export const ExercisePreviewCard: FC<{
                   <Typography>{props.explanation}</Typography>
                   <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
                     {props.tags.map((tag) => (
-                      <StyledRouterLink key={tag} to=".">
+                      <StyledRouterLink key={tag} to="." underline="hover">
                         {`#${tag}`}
                       </StyledRouterLink>
                     ))}
@@ -177,13 +186,15 @@ export const ExercisePreviewCard: FC<{
                     gap: 1
                   }}
                 >
-                  <Button
+                  <StyledRouterLinkButton
+                    to="/exercise"
+                    search={{ exerciseId: props.exerciseId }}
                     variant="contained"
                     startIcon={<SelfImprovementRounded />}
                     disableTouchRipple
                   >
                     Start exercise
-                  </Button>
+                  </StyledRouterLinkButton>
 
                   <Button variant="outlined" startIcon={<OpenInNewRounded />} disableTouchRipple>
                     Learn

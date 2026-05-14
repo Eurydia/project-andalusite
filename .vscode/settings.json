@@ -19,5 +19,10 @@
   },
   "search.exclude": {
     "**/routeTree.gen.ts": true
+  },
+  "editor.codeActionsOnSave": {
+    "source.fixAll.prettier": "explicit",
+    "source.removeUnusedImports": "explicit",
+    "source.sortImports": "explicit"
   }
 }

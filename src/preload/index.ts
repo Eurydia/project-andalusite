@@ -1,16 +1,30 @@
 import { electronAPI } from '@electron-toolkit/preload'
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer, type BrowserWindowConstructorOptions } from 'electron'
 
-// Use `contextBridge` APIs to expose Electron APIs to
-// renderer only if context isolation is enabled, otherwise
-// just add to the DOM global.
-if (process.contextIsolated) {
-  try {
-    contextBridge.exposeInMainWorld('electron', electronAPI)
-  } catch (error) {
-    console.error(error)
-  }
-} else {
-  // @ts-ignore (define in dts)
-  window.electron = electronAPI
+const api = {
+  createWindow: (
+    payload?: BrowserWindowConstructorOptions & {
+      url?: string
+    }
+  ) =>
+    ipcRenderer.invoke('created-window:create', payload) as Promise<{
+      id: number
+    }>,
+
+  deleteWindow: (id: number) =>
+    ipcRenderer.invoke('created-window:delete', id) as Promise<{
+      ok: boolean
+    }>,
+
+  windowExists: (id: number) =>
+    ipcRenderer.invoke('created-window:exists', id) as Promise<{
+      exists: boolean
+    }>
+}
+
+try {
+  contextBridge.exposeInMainWorld('electron', electronAPI)
+  contextBridge.exposeInMainWorld('api', api)
+} catch (error) {
+  console.error(error)
 }

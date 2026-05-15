@@ -5,18 +5,17 @@ import z from 'zod'
 
 export const Route = createFileRoute('/')({
   component: RouteComponent,
-  validateSearch: z.object({
-    view: z.enum(['MAIN', 'MEDIA_PLAYER'])
-  })
+  validateSearch: z
+    .object({
+      url: z.string().optional()
+    })
+    .optional()
 })
 
 function RouteComponent() {
   const search = Route.useSearch()
-  switch (search.view) {
-    case 'MEDIA_PLAYER':
-      return <ReactPlayer />
-    case 'MAIN':
-    default:
-      return <View$MainWindow />
+  if (search?.url) {
+    return <ReactPlayer controls loop height={'100dvh'} width={'100dvw'} src={search.url} />
   }
+  return <View$MainWindow />
 }

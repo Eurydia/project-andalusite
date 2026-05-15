@@ -1,10 +1,9 @@
 import { KeyboardArrowLeftRounded } from '@mui/icons-material'
-import { Button, Grid, Stack, Toolbar } from '@mui/material'
+import { Box, Button, Stack, Toolbar, Typography } from '@mui/material'
 import { StyledRouterLinkButton } from '@renderer/components/styled-router-link-button'
 import { useSynthSoundEffects } from '@renderer/hooks/use-play-feedback-sfx'
 import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useRef } from 'react'
-import ReactPlayer from 'react-player'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 
 function stopStream(stream?: MediaStream) {
@@ -43,26 +42,77 @@ async function getWebcamStream(signal: AbortSignal) {
   return stream
 }
 
+const openCreatedWindow = () =>
+  window.api.createWindow({
+    width: 800,
+    height: 600,
+    title: 'Media Player',
+    x: 100,
+    y: 100,
+    url: 'https://www.youtube.com/embed/BPK9WNtpBgk'
+  })
+
+const closeCreatedWindow = (id?: number) => {
+  if (id === undefined) {
+    return
+  }
+
+  void window.api.deleteWindow(id)
+}
+
+const formatTimer = (seconds: number) => {
+  const minutes = String(Math.floor(seconds / 60)).padStart(2, '0')
+  const remainingSeconds = String(seconds % 60).padStart(2, '0')
+
+  return `${minutes}:${remainingSeconds}`
+}
+
 export const Route = createFileRoute('/exercise')({
   component: RouteComponent,
   loader: async ({ abortController }) => {
     const stream = await getWebcamStream(abortController.signal)
+
     return {
       stream
     }
   },
   onLeave: (match) => {
-    const loaderData = match.loaderData
-    stopStream(loaderData?.stream)
+    stopStream(match.loaderData?.stream)
   }
 })
 
 function RouteComponent() {
   const { stream } = Route.useLoaderData()
   const videoRef = useRef<HTMLVideoElement | null>(null)
+  const createdWindowIdRef = useRef<number | undefined>(undefined)
+  const closedWindowRef = useRef(false)
+  const [createdWindowId, setCreatedWindowId] = useState<number | undefined>(undefined)
+  const [createdWindowOpen, setCreatedWindowOpen] = useState(false)
+  const [timerSeconds, setTimerSeconds] = useState(0)
+  const [timerPaused, setTimerPaused] = useState(false)
   const { playBad, playGood } = useSynthSoundEffects()
+
+  useEffect(() => {
+    createdWindowIdRef.current = createdWindowId
+  }, [createdWindowId])
+
+  useEffect(() => {
+    if (timerPaused) {
+      return
+    }
+
+    const intervalId = window.setInterval(() => {
+      setTimerSeconds((value) => value + 1)
+    }, 1000)
+
+    return () => {
+      window.clearInterval(intervalId)
+    }
+  }, [timerPaused])
+
   useEffect(() => {
     const video = videoRef.current
+
     if (!video) {
       return
     }
@@ -74,58 +124,164 @@ function RouteComponent() {
     }
   }, [stream])
 
+  useEffect(() => {
+    let active = true
+
+    const createWindowOnEnter = async () => {
+      const createdWindow = await openCreatedWindow()
+
+      if (!active) {
+        closeCreatedWindow(createdWindow.id)
+        return
+      }
+
+      createdWindowIdRef.current = createdWindow.id
+      setCreatedWindowId(createdWindow.id)
+      setCreatedWindowOpen(true)
+    }
+
+    void createWindowOnEnter()
+
+    return () => {
+      active = false
+    }
+  }, [])
+
+  useEffect(() => {
+    let active = true
+
+    const syncCreatedWindowOpen = async () => {
+      const id = createdWindowIdRef.current
+
+      if (id === undefined) {
+        if (active) {
+          setCreatedWindowOpen(false)
+        }
+
+        return
+      }
+
+      const result = await window.api.windowExists(id)
+
+      if (active) {
+        setCreatedWindowOpen(result.exists)
+      }
+    }
+
+    void syncCreatedWindowOpen()
+
+    const intervalId = window.setInterval(() => {
+      void syncCreatedWindowOpen()
+    }, 1000)
+
+    return () => {
+      active = false
+      window.clearInterval(intervalId)
+    }
+  }, [])
+
+  useEffect(() => {
+    const closeWindowOnce = () => {
+      if (closedWindowRef.current) {
+        return
+      }
+
+      closedWindowRef.current = true
+      closeCreatedWindow(createdWindowIdRef.current)
+    }
+
+    window.addEventListener('pagehide', closeWindowOnce)
+    window.addEventListener('beforeunload', closeWindowOnce)
+
+    return () => {
+      window.removeEventListener('pagehide', closeWindowOnce)
+      window.removeEventListener('beforeunload', closeWindowOnce)
+      closeWindowOnce()
+    }
+  }, [])
+
   return (
-    <Stack>
-      <Toolbar disableGutters variant="dense" sx={{ justifyContent: 'space-between' }}>
+    <Box sx={{ height: '100vh', overflow: 'hidden', position: 'relative', background: 'black' }}>
+      <video
+        ref={videoRef}
+        autoPlay
+        muted
+        playsInline
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
+          background: 'black'
+        }}
+      />
+
+      <Toolbar
+        disableGutters
+        variant="dense"
+        sx={{
+          position: 'fixed',
+          left: '50%',
+          bottom: 16,
+          transform: 'translateX(-50%)',
+          zIndex: 10,
+          gap: 1,
+          px: 2,
+          borderRadius: 999,
+          bgcolor: 'background.paper',
+          boxShadow: 6
+        }}
+      >
         <StyledRouterLinkButton to="/" startIcon={<KeyboardArrowLeftRounded />}>
           {`Back`}
         </StyledRouterLinkButton>
-      </Toolbar>
-      <Grid container sx={{ height: 'fit-content' }}>
-        <Grid size={{ lg: 6 }}>
-          <ReactPlayer
-            controls
-            loop
-            height={'100%'}
-            width={'100%'}
-            src={'https://www.youtube.com/embed/BPK9WNtpBgk'}
-          />
-        </Grid>
-        <Grid
-          size={{ lg: 6 }}
-          sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+
+        <Typography sx={{ minWidth: 56, textAlign: 'center' }}>
+          {formatTimer(timerSeconds)}
+        </Typography>
+
+        <Button
+          onClick={() => {
+            setTimerPaused((value) => !value)
+          }}
         >
-          <video
-            ref={videoRef}
-            autoPlay
-            muted
-            playsInline
-            style={{
-              width: '100%',
-              objectFit: 'cover',
-              background: 'black'
+          {timerPaused ? `Resume` : `Pause`}
+        </Button>
+
+        {!createdWindowOpen && (
+          <Button
+            onClick={async () => {
+              const createdWindow = await openCreatedWindow()
+
+              closedWindowRef.current = false
+              createdWindowIdRef.current = createdWindow.id
+              setCreatedWindowId(createdWindow.id)
+              setCreatedWindowOpen(true)
             }}
-          />
-        </Grid>
-      </Grid>
-      <Toolbar>
-        <Button
-          onClick={() => {
-            toast.success('Nice form!')
-            playGood()
-          }}
-        >
-          {`Test okay feedback`}
-        </Button>
-        <Button
-          onClick={() => {
-            toast.warn('Bad form!')
-            playBad()
-          }}
-        >
-          {`Test warning feedback`}
-        </Button>
+          >
+            {`Reopen player`}
+          </Button>
+        )}
+
+        <Stack direction="row">
+          <Button
+            onClick={() => {
+              toast.success('Nice form!')
+              playGood()
+            }}
+          >
+            {`Test okay feedback`}
+          </Button>
+
+          <Button
+            onClick={() => {
+              toast.warn('Bad form!')
+              playBad()
+            }}
+          >
+            {`Test warning feedback`}
+          </Button>
+        </Stack>
       </Toolbar>
-    </Stack>
+    </Box>
   )
 }

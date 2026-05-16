@@ -1,8 +1,4 @@
-import {
-  KeyboardArrowLeftRounded,
-  OpenInNewRounded,
-  SelfImprovementRounded
-} from '@mui/icons-material'
+import { KeyboardArrowLeftRounded, SelfImprovementRounded } from '@mui/icons-material'
 import Whatshot from '@mui/icons-material/Whatshot'
 import { Button, Toolbar } from '@mui/material'
 import Box from '@mui/material/Box'
@@ -16,13 +12,13 @@ import DialogContent from '@mui/material/DialogContent'
 import Grid from '@mui/material/Grid'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
-import prettyMilliseconds from 'pretty-ms'
-import { FC, useCallback, useMemo, useState } from 'react'
+import { FC, useCallback, useEffect, useMemo, useState } from 'react'
+import { Joyride, STATUS, type CallBackProps, type Step } from 'react-joyride'
 import ReactPlayer from 'react-player'
-import { StyledRouterLink } from './styled-router-link'
 import { StyledRouterLinkButton } from './styled-router-link-button'
 
 export const ExercisePreviewCard: FC<{
+  htmlId?: string
   exerciseId: string
   name: string
   explanation: string
@@ -33,17 +29,77 @@ export const ExercisePreviewCard: FC<{
   tags: Array<string>
 }> = (props) => {
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [dialogTourRun, setDialogTourRun] = useState(false)
+
   const openDialog = useCallback(() => {
     setDialogOpen(true)
   }, [])
+
   const closeDialog = useCallback(() => {
     setDialogOpen(false)
   }, [])
 
+  const dialogTourSteps = useMemo<Step[]>(
+    () => [
+      {
+        target: '[data-tour="exercise-video-preview"]',
+        content: 'Preview the exercise movement before starting.',
+        placement: 'right',
+        disableBeacon: true
+      },
+      {
+        target: '[data-tour="exercise-title"]',
+        content: 'Check the exercise name here.',
+        placement: 'left',
+        disableBeacon: true
+      },
+      {
+        target: '[data-tour="exercise-difficulty"]',
+        content: 'Use the difficulty label to choose the right level.',
+        placement: 'left',
+        disableBeacon: true
+      },
+      {
+        target: '[data-tour="exercise-description"]',
+        content: 'Read the instructions before beginning.',
+        placement: 'left',
+        disableBeacon: true
+      },
+      {
+        target: '[data-tour="exercise-start-button"]',
+        content: 'Press Start exercise to begin.',
+        placement: 'top',
+        disableBeacon: true
+      }
+    ],
+    []
+  )
+
+  useEffect(() => {
+    if (!dialogOpen) {
+      setDialogTourRun(false)
+      return
+    }
+
+    const timeout = window.setTimeout(() => {
+      setDialogTourRun(true)
+    }, 150)
+
+    return () => {
+      window.clearTimeout(timeout)
+    }
+  }, [dialogOpen])
+
+  function handleDialogTourCallback(data: CallBackProps) {
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setDialogTourRun(false)
+    }
+  }
+
   const badge = useMemo(() => {
     switch (props.difficulty) {
       case 'BASIC':
-        return <Chip icon={<Whatshot />} label="BASIC" color="primary" />
+        return <Chip icon={<Whatshot />} label="BASIC" color="warning" />
       case 'INTERMEDIATE':
         return (
           <Chip
@@ -54,13 +110,13 @@ export const ExercisePreviewCard: FC<{
               </Stack>
             }
             label="INTERMEDIATE"
-            color="primary"
+            color="error"
           />
         )
       case 'ADVANCED':
         return (
           <Chip
-            color="primary"
+            color="secondary"
             icon={
               <Stack direction={'row'} useFlexGap sx={{ flexWrap: 'nowrap' }}>
                 <Whatshot />
@@ -76,7 +132,7 @@ export const ExercisePreviewCard: FC<{
 
   return (
     <>
-      <Card variant="outlined">
+      <Card id={props.htmlId} variant="outlined">
         <CardActionArea onClick={openDialog} disableTouchRipple>
           <CardMedia
             image={props.thumbnailSrc}
@@ -86,6 +142,7 @@ export const ExercisePreviewCard: FC<{
               aspectRatio: '16/10'
             }}
           />
+
           <CardHeader
             title={props.name}
             subheader={badge}
@@ -101,10 +158,32 @@ export const ExercisePreviewCard: FC<{
           />
         </CardActionArea>
       </Card>
+
       <Dialog maxWidth="lg" open={dialogOpen} onClose={closeDialog}>
+        <Joyride
+          run={dialogTourRun}
+          continuous
+          showProgress
+          showSkipButton
+          steps={dialogTourSteps}
+          callback={handleDialogTourCallback}
+          styles={{
+            options: {
+              zIndex: 2000,
+              spotlightPadding: 12,
+              backgroundColor: '#111111',
+              textColor: '#ffffff',
+              primaryColor: '#ffffff',
+              arrowColor: '#111111',
+              overlayColor: 'rgba(0, 0, 0, 0.48)'
+            }
+          }}
+        />
+
         <Grid container sx={{ height: '75vh', overflow: 'hidden' }}>
           <Grid
             size={{ lg: 8 }}
+            data-tour="exercise-video-preview"
             sx={{
               height: '100%',
               display: 'flex',
@@ -125,6 +204,7 @@ export const ExercisePreviewCard: FC<{
               <ReactPlayer controls loop height={'100%'} width={'100%'} src={props.videoClipSrc} />
             </Box>
           </Grid>
+
           <Grid
             size={{ lg: 'grow' }}
             sx={{
@@ -143,7 +223,9 @@ export const ExercisePreviewCard: FC<{
                   >
                     {`Back`}
                   </Button>
+
                   <Typography
+                    data-tour="exercise-title"
                     variant="h2"
                     sx={{
                       fontWeight: 900,
@@ -157,28 +239,20 @@ export const ExercisePreviewCard: FC<{
                   >
                     {props.name}
                   </Typography>
+
                   <Stack
+                    data-tour="exercise-difficulty"
                     direction="row"
                     spacing={1}
                     divider={<Typography color="textSecondary">{`\u2022`}</Typography>}
                     sx={{ flexWrap: 'wrap', alignItems: 'center' }}
                   >
                     {badge}
-                    <Typography>
-                      {`Duration: ~${prettyMilliseconds(props.approxDurationSeconds * 1000)}`}
-                    </Typography>
                   </Stack>
                 </Stack>
-                <Stack spacing={2}>
-                  <Typography>{props.explanation}</Typography>
-                  <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-                    {props.tags.map((tag) => (
-                      <StyledRouterLink key={tag} to="." underline="hover">
-                        {`#${tag}`}
-                      </StyledRouterLink>
-                    ))}
-                  </Stack>
-                </Stack>
+
+                <Typography data-tour="exercise-description">{props.explanation}</Typography>
+
                 <Toolbar
                   disableGutters
                   variant="dense"
@@ -187,6 +261,7 @@ export const ExercisePreviewCard: FC<{
                   }}
                 >
                   <StyledRouterLinkButton
+                    data-tour="exercise-start-button"
                     to="/exercise"
                     search={{ exerciseId: props.exerciseId }}
                     variant="contained"
@@ -195,10 +270,6 @@ export const ExercisePreviewCard: FC<{
                   >
                     Start exercise
                   </StyledRouterLinkButton>
-
-                  <Button variant="outlined" startIcon={<OpenInNewRounded />} disableTouchRipple>
-                    Learn
-                  </Button>
                 </Toolbar>
               </Stack>
             </DialogContent>

@@ -9,6 +9,7 @@ export const ExerciseGroupDisplay: FC<{ difficulty: 'ADVANCED' | 'BASIC' | 'INTE
     {Array.from({ length: 3 }).map((_, i) => (
       <Grid size={4} key={i}>
         <ExercisePreviewCard
+          tourTarget={props.difficulty === 'BASIC' && i === 0 ? 'exercise-card' : undefined}
           exerciseId={'2e8e83e9-fcf2-40d2-aed0-dbbdf14b7704'}
           name={'EXERCISE ' + props.difficulty + i.toString().padStart(2, '0')}
           explanation={

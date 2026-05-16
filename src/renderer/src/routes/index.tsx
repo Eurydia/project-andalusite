@@ -1,4 +1,4 @@
-import { View$MainWindow } from '@renderer/views/media-player-window.view'
+import { View$MainWindow } from '@renderer/views/main-window.view'
 import { createFileRoute } from '@tanstack/react-router'
 import { default as ReactPlayer } from 'react-player'
 import z from 'zod'

@@ -39,7 +39,7 @@ export const View$MainWindow: FC = () => {
         skipBeacon: true
       },
       {
-        target: '[data-tour="exercise-card"]',
+        target: '#exercise-card-basic-0',
         content: 'Click an exercise to open its preview.',
         placement: 'top',
         skipBeacon: true

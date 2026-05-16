@@ -1,10 +1,9 @@
 import { KeyboardArrowLeftRounded } from '@mui/icons-material'
-import { Box, Button, Stack, Toolbar, Typography } from '@mui/material'
+import { Box, Button, Toolbar, Typography } from '@mui/material'
 import { StyledRouterLinkButton } from '@renderer/components/styled-router-link-button'
 import { useSynthSoundEffects } from '@renderer/hooks/use-play-feedback-sfx'
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
-import { toast } from 'react-toastify'
 
 function stopStream(stream?: MediaStream) {
   stream?.getTracks().forEach((track) => {
@@ -262,7 +261,7 @@ function RouteComponent() {
           </Button>
         )}
 
-        <Stack direction="row">
+        {/* <Stack direction="row">
           <Button
             onClick={() => {
               toast.success('Nice form!')
@@ -280,7 +279,7 @@ function RouteComponent() {
           >
             {`Test warning feedback`}
           </Button>
-        </Stack>
+        </Stack> */}
       </Toolbar>
     </Box>
   )

@@ -13,7 +13,7 @@ import Grid from '@mui/material/Grid'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
-import { Joyride, STATUS, type CallBackProps, type Step } from 'react-joyride'
+import { Joyride, STATUS, type EventData, type Step } from 'react-joyride'
 import ReactPlayer from 'react-player'
 import { StyledRouterLinkButton } from './styled-router-link-button'
 
@@ -37,6 +37,7 @@ export const ExercisePreviewCard: FC<{
 
   const closeDialog = useCallback(() => {
     setDialogOpen(false)
+    setDialogTourRun(false)
   }, [])
 
   const dialogTourSteps = useMemo<Step[]>(
@@ -45,31 +46,31 @@ export const ExercisePreviewCard: FC<{
         target: '[data-tour="exercise-video-preview"]',
         content: 'Preview the exercise movement before starting.',
         placement: 'right',
-        disableBeacon: true
+        skipBeacon: true
       },
       {
         target: '[data-tour="exercise-title"]',
         content: 'Check the exercise name here.',
         placement: 'left',
-        disableBeacon: true
+        skipBeacon: true
       },
       {
         target: '[data-tour="exercise-difficulty"]',
         content: 'Use the difficulty label to choose the right level.',
         placement: 'left',
-        disableBeacon: true
+        skipBeacon: true
       },
       {
         target: '[data-tour="exercise-description"]',
         content: 'Read the instructions before beginning.',
         placement: 'left',
-        disableBeacon: true
+        skipBeacon: true
       },
       {
         target: '[data-tour="exercise-start-button"]',
         content: 'Press Start exercise to begin.',
         placement: 'top',
-        disableBeacon: true
+        skipBeacon: true
       }
     ],
     []
@@ -83,14 +84,14 @@ export const ExercisePreviewCard: FC<{
 
     const timeout = window.setTimeout(() => {
       setDialogTourRun(true)
-    }, 150)
+    }, 250)
 
     return () => {
       window.clearTimeout(timeout)
     }
   }, [dialogOpen])
 
-  function handleDialogTourCallback(data: CallBackProps) {
+  function handleDialogTourEvent(data: EventData) {
     if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
       setDialogTourRun(false)
     }
@@ -104,7 +105,7 @@ export const ExercisePreviewCard: FC<{
         return (
           <Chip
             icon={
-              <Stack direction={'row'} useFlexGap sx={{ flexWrap: 'nowrap' }}>
+              <Stack direction="row" useFlexGap sx={{ flexWrap: 'nowrap' }}>
                 <Whatshot />
                 <Whatshot />
               </Stack>
@@ -118,7 +119,7 @@ export const ExercisePreviewCard: FC<{
           <Chip
             color="secondary"
             icon={
-              <Stack direction={'row'} useFlexGap sx={{ flexWrap: 'nowrap' }}>
+              <Stack direction="row" useFlexGap sx={{ flexWrap: 'nowrap' }}>
                 <Whatshot />
                 <Whatshot />
                 <Whatshot />
@@ -163,20 +164,18 @@ export const ExercisePreviewCard: FC<{
         <Joyride
           run={dialogTourRun}
           continuous
-          showProgress
-          showSkipButton
           steps={dialogTourSteps}
-          callback={handleDialogTourCallback}
-          styles={{
-            options: {
-              zIndex: 2000,
-              spotlightPadding: 12,
-              backgroundColor: '#111111',
-              textColor: '#ffffff',
-              primaryColor: '#ffffff',
-              arrowColor: '#111111',
-              overlayColor: 'rgba(0, 0, 0, 0.48)'
-            }
+          onEvent={handleDialogTourEvent}
+          options={{
+            zIndex: 2000,
+            showProgress: true,
+            buttons: ['back', 'close', 'skip', 'primary'],
+            spotlightPadding: 12,
+            backgroundColor: '#111111',
+            textColor: '#ffffff',
+            primaryColor: '#ffffff',
+            arrowColor: '#111111',
+            overlayColor: 'rgba(0, 0, 0, 0.48)'
           }}
         />
 
@@ -201,7 +200,7 @@ export const ExercisePreviewCard: FC<{
                 justifyContent: 'center'
               }}
             >
-              <ReactPlayer controls loop height={'100%'} width={'100%'} src={props.videoClipSrc} />
+              <ReactPlayer controls loop height="100%" width="100%" src={props.videoClipSrc} />
             </Box>
           </Grid>
 
@@ -260,16 +259,17 @@ export const ExercisePreviewCard: FC<{
                     gap: 1
                   }}
                 >
-                  <StyledRouterLinkButton
-                    data-tour="exercise-start-button"
-                    to="/exercise"
-                    search={{ exerciseId: props.exerciseId }}
-                    variant="contained"
-                    startIcon={<SelfImprovementRounded />}
-                    disableTouchRipple
-                  >
-                    Start exercise
-                  </StyledRouterLinkButton>
+                  <Box component="span" data-tour="exercise-start-button">
+                    <StyledRouterLinkButton
+                      to="/exercise"
+                      search={{ exerciseId: props.exerciseId }}
+                      variant="contained"
+                      startIcon={<SelfImprovementRounded />}
+                      disableTouchRipple
+                    >
+                      Start exercise
+                    </StyledRouterLinkButton>
+                  </Box>
                 </Toolbar>
               </Stack>
             </DialogContent>

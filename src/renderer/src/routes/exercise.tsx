@@ -1,9 +1,11 @@
 import { KeyboardArrowLeftRounded } from '@mui/icons-material'
-import { Box, Button, Toolbar, Typography } from '@mui/material'
+import { Box, Button, Stack, Toolbar, Typography, useTheme } from '@mui/material'
 import { StyledRouterLinkButton } from '@renderer/components/styled-router-link-button'
 import { useSynthSoundEffects } from '@renderer/hooks/use-play-feedback-sfx'
 import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Joyride, STATUS, type EventData, type Step } from 'react-joyride'
+import { toast } from 'react-toastify'
 
 function stopStream(stream?: MediaStream) {
   stream?.getTracks().forEach((track) => {
@@ -89,7 +91,74 @@ function RouteComponent() {
   const [createdWindowOpen, setCreatedWindowOpen] = useState(false)
   const [timerSeconds, setTimerSeconds] = useState(0)
   const [timerPaused, setTimerPaused] = useState(false)
+  const [tourRun, setTourRun] = useState(false)
   const { playBad, playGood } = useSynthSoundEffects()
+  const t = useTheme()
+
+  const tourSteps = useMemo<Step[]>(
+    () => [
+      {
+        target: '[data-tour="exercise-camera-preview"]',
+        content: 'This is your live camera view for the exercise.',
+        placement: 'center',
+        skipBeacon: true
+      },
+      {
+        target: '[data-tour="exercise-timer"]',
+        content: 'This timer tracks how long the current exercise session has been running.',
+        placement: 'top',
+        skipBeacon: true
+      },
+      {
+        target: '[data-tour="exercise-pause-button"]',
+        content: 'Use this button to pause or resume the session timer.',
+        placement: 'top',
+        skipBeacon: true
+      },
+      {
+        target: '[data-tour="exercise-feedback-good"]',
+        content: 'Use this to test positive form feedback.',
+        placement: 'top',
+        skipBeacon: true
+      },
+      {
+        target: '[data-tour="exercise-feedback-bad"]',
+        content: 'Use this to test warning feedback.',
+        placement: 'top',
+        skipBeacon: true
+      },
+      {
+        target: '[data-tour="exercise-video-player"]',
+        content:
+          'The reference exercise video opens in a separate player window. Reopen it here if it was closed.',
+        placement: 'top',
+        skipBeacon: true
+      },
+      {
+        target: '[data-tour="exercise-back-button"]',
+        content: 'Return to the exercise list from here.',
+        placement: 'top',
+        skipBeacon: true
+      }
+    ],
+    []
+  )
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setTourRun(true)
+    }, 250)
+
+    return () => {
+      window.clearTimeout(timeout)
+    }
+  }, [])
+
+  function handleTourEvent(data: EventData) {
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setTourRun(false)
+    }
+  }
 
   useEffect(() => {
     createdWindowIdRef.current = createdWindowId
@@ -201,8 +270,27 @@ function RouteComponent() {
 
   return (
     <Box sx={{ height: '100vh', overflow: 'hidden', position: 'relative', background: 'black' }}>
+      <Joyride
+        run={tourRun}
+        continuous
+        steps={tourSteps}
+        onEvent={handleTourEvent}
+        options={{
+          zIndex: t.zIndex.modal + 1,
+          skipBeacon: true,
+          showProgress: true,
+          spotlightPadding: 12,
+          backgroundColor: '#111111',
+          textColor: '#ffffff',
+          primaryColor: '#ffffff',
+          arrowColor: '#111111',
+          overlayColor: 'rgba(0, 0, 0, 0.48)'
+        }}
+      />
+
       <video
         ref={videoRef}
+        data-tour="exercise-camera-preview"
         autoPlay
         muted
         playsInline
@@ -230,15 +318,18 @@ function RouteComponent() {
           boxShadow: 6
         }}
       >
-        <StyledRouterLinkButton to="/" startIcon={<KeyboardArrowLeftRounded />}>
-          {`Back`}
-        </StyledRouterLinkButton>
+        <Box component="span" data-tour="exercise-back-button">
+          <StyledRouterLinkButton to="/" startIcon={<KeyboardArrowLeftRounded />}>
+            {`Back`}
+          </StyledRouterLinkButton>
+        </Box>
 
-        <Typography sx={{ minWidth: 56, textAlign: 'center' }}>
+        <Typography data-tour="exercise-timer" sx={{ minWidth: 56, textAlign: 'center' }}>
           {formatTimer(timerSeconds)}
         </Typography>
 
         <Button
+          data-tour="exercise-pause-button"
           onClick={() => {
             setTimerPaused((value) => !value)
           }}
@@ -246,40 +337,46 @@ function RouteComponent() {
           {timerPaused ? `Resume` : `Pause`}
         </Button>
 
-        {!createdWindowOpen && (
+        <Stack direction="row" spacing={1}>
           <Button
-            onClick={async () => {
-              const createdWindow = await openCreatedWindow()
-
-              closedWindowRef.current = false
-              createdWindowIdRef.current = createdWindow.id
-              setCreatedWindowId(createdWindow.id)
-              setCreatedWindowOpen(true)
-            }}
-          >
-            {`Reopen player`}
-          </Button>
-        )}
-
-        {/* <Stack direction="row">
-          <Button
+            data-tour="exercise-feedback-good"
             onClick={() => {
               toast.success('Nice form!')
               playGood()
             }}
           >
-            {`Test okay feedback`}
+            {`Good`}
           </Button>
 
           <Button
+            data-tour="exercise-feedback-bad"
             onClick={() => {
               toast.warn('Bad form!')
               playBad()
             }}
           >
-            {`Test warning feedback`}
+            {`Bad`}
           </Button>
-        </Stack> */}
+        </Stack>
+
+        <Box component="span" data-tour="exercise-video-player">
+          {createdWindowOpen ? (
+            <Typography sx={{ px: 1 }}>{`Player open`}</Typography>
+          ) : (
+            <Button
+              onClick={async () => {
+                const createdWindow = await openCreatedWindow()
+
+                closedWindowRef.current = false
+                createdWindowIdRef.current = createdWindow.id
+                setCreatedWindowId(createdWindow.id)
+                setCreatedWindowOpen(true)
+              }}
+            >
+              {`Reopen player`}
+            </Button>
+          )}
+        </Box>
       </Toolbar>
     </Box>
   )

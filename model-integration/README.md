@@ -1,0 +1,2 @@
+- https://docs.ultralytics.com/modes/predict#inference-sources
+-https://docs.google.com/document/d/1C4v2mJZ2hz5eLPI3pe6P1oJmHRCpg6Fu04xAzQeTEhM/edit?tab=t.0

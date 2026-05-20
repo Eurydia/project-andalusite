@@ -21,5 +21,10 @@ declare global {
   interface Window {
     electron: ElectronAPI
     api: API
+    persist: {
+      get<T>(key: string, fallbackValue?: T): Promise<T>
+      set<T>(key: string, value: T): Promise<T>
+      delete(key: string): Promise<boolean>
+    }
   }
 }

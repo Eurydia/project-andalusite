@@ -116,18 +116,6 @@ function RouteComponent() {
         skipBeacon: true
       },
       {
-        target: '[data-tour="exercise-feedback-good"]',
-        content: 'Use this to test positive form feedback.',
-        placement: 'top',
-        skipBeacon: true
-      },
-      {
-        target: '[data-tour="exercise-feedback-bad"]',
-        content: 'Use this to test warning feedback.',
-        placement: 'top',
-        skipBeacon: true
-      },
-      {
         target: '[data-tour="exercise-video-player"]',
         content:
           'The reference exercise video opens in a separate player window. Reopen it here if it was closed.',

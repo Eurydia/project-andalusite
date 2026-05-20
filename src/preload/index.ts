@@ -25,6 +25,14 @@ const api = {
 try {
   contextBridge.exposeInMainWorld('electron', electronAPI)
   contextBridge.exposeInMainWorld('api', api)
+  contextBridge.exposeInMainWorld('persist', {
+    get: <T>(key: string, fallbackValue?: T): Promise<T> =>
+      ipcRenderer.invoke('persist:get', key, fallbackValue),
+
+    set: <T>(key: string, value: T): Promise<T> => ipcRenderer.invoke('persist:set', key, value),
+
+    delete: (key: string): Promise<boolean> => ipcRenderer.invoke('persist:delete', key)
+  })
 } catch (error) {
   console.error(error)
 }

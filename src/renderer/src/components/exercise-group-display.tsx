@@ -2,17 +2,14 @@ import { Grid } from '@mui/material'
 import { FC } from 'react'
 import { ExercisePreviewCard } from './exercise-preview-card'
 
-const EXERCISE_CARD_HTML_ID_BASE = 'exercise-card'
-
 export const ExerciseGroupDisplay: FC<{ difficulty: 'ADVANCED' | 'BASIC' | 'INTERMEDIATE' }> = (
   props
 ) => (
   <Grid container spacing={4}>
     {Array.from({ length: 3 }).map((_, i) => {
-      const exerciseCardHtmlId = `${EXERCISE_CARD_HTML_ID_BASE}-${props.difficulty.toLowerCase()}-${i}`
-
+      const exerciseCardHtmlId = `exercise-card-${props.difficulty.toLowerCase()}-${i}`
       return (
-        <Grid size={4} key={exerciseCardHtmlId}>
+        <Grid size={{ lg: 4, sm: 6 }} key={exerciseCardHtmlId}>
           <ExercisePreviewCard
             htmlId={exerciseCardHtmlId}
             exerciseId={'2e8e83e9-fcf2-40d2-aed0-dbbdf14b7704'}

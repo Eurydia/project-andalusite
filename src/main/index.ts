@@ -2,12 +2,15 @@ import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { app, BrowserWindow, shell } from 'electron'
 import { join } from 'path'
 import icon from '../../resources/icon.png?asset'
+import { registerPersistIpc } from './modules/persist'
 import { registerCreatedWindowIpc } from './modules/sub-window-manager'
 
 const createWindow = () => {
   const mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
+    minHeight: 400,
+    minWidth: 640,
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
@@ -45,6 +48,7 @@ app.whenReady().then(() => {
   })
 
   registerCreatedWindowIpc()
+  registerPersistIpc()
   createWindow()
 
   app.on('activate', () => {

@@ -1,4 +1,4 @@
-import { HelpRounded, SearchRounded } from '@mui/icons-material'
+import { HelpRounded, SearchRounded, SettingsRounded } from '@mui/icons-material'
 import {
   AppBar,
   Button,
@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  IconButton,
   InputAdornment,
   Stack,
   TextField,
@@ -79,13 +80,13 @@ export const View$MainWindow: FC = () => {
         }}
       />
 
-      <AppBar color="default" position="sticky">
+      <AppBar position="relative">
         <Toolbar sx={{ justifyContent: 'space-between' }}>
           <Typography>{`Information`}</Typography>
           <Typography>{`Exercise poses`}</Typography>
-          <Button onClick={() => setSettingDialogOpen(true)}>
-            <Typography>{`Settings`}</Typography>
-          </Button>
+          <IconButton onClick={() => setSettingDialogOpen(true)}>
+            <SettingsRounded />
+          </IconButton>
         </Toolbar>
       </AppBar>
 

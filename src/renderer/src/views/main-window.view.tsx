@@ -17,6 +17,7 @@ import {
   Typography,
   useTheme
 } from '@mui/material'
+import { BASIC_EXERCISES } from '@renderer/assets/exercises'
 import { ExerciseGroupDisplay } from '@renderer/components/exercise-group-display'
 import { FC, useEffect, useMemo, useState } from 'react'
 import { Joyride, STATUS, type EventData, type Step } from 'react-joyride'
@@ -121,10 +122,10 @@ export const View$MainWindow: FC = () => {
 
           <Stack spacing={4} data-tour="exercise-results">
             <Typography sx={{ fontWeight: 900 }} variant="h2">{`Basic`}</Typography>
-            <ExerciseGroupDisplay difficulty="BASIC" />
+            <ExerciseGroupDisplay items={BASIC_EXERCISES.map((x) => ({ ...x }))} />
 
             <Typography sx={{ fontWeight: 900 }} variant="h2">{`Intermediate`}</Typography>
-            <ExerciseGroupDisplay difficulty="INTERMEDIATE" />
+            <ExerciseGroupDisplay items={[null]} />
 
             <Typography sx={{ fontWeight: 900 }} variant="h2">{`Advanced`}</Typography>
             <ExerciseGroupDisplay difficulty="ADVANCED" />

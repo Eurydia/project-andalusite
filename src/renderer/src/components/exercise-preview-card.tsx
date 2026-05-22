@@ -12,6 +12,7 @@ import DialogContent from '@mui/material/DialogContent'
 import Grid from '@mui/material/Grid'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
+import { ExerciseData } from '@renderer/types'
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { Joyride, STATUS, type EventData, type Step } from 'react-joyride'
 import ReactPlayer from 'react-player'
@@ -19,14 +20,7 @@ import { StyledRouterLinkButton } from './styled-router-link-button'
 
 export const ExercisePreviewCard: FC<{
   htmlId?: string
-  exerciseId: string
-  name: string
-  explanation: string
-  thumbnailSrc: string
-  videoClipSrc: string
-  approxDurationSeconds: number
-  difficulty: 'BASIC' | 'INTERMEDIATE' | 'ADVANCED'
-  tags: Array<string>
+  data: ExerciseData
 }> = (props) => {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [dialogTourRun, setDialogTourRun] = useState(false)

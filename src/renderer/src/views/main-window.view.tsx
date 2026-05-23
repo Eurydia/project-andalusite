@@ -18,12 +18,14 @@ import {
   useTheme
 } from '@mui/material'
 import { BASIC_EXERCISES } from '@renderer/assets/exercises'
+import { AboutAppDialog } from '@renderer/components/about-app-dialog'
 import { ExerciseGroupDisplay } from '@renderer/components/exercise-group-display'
 import { FC, useEffect, useMemo, useState } from 'react'
 import { Joyride, STATUS, type EventData, type Step } from 'react-joyride'
 
 export const View$MainWindow: FC = () => {
   const [settingDialogOpen, setSettingDialogOpen] = useState(false)
+  const [aboutDialogOpen, setAboutDialogOpen] = useState(false)
   const [tourRun, setTourRun] = useState(false)
 
   const tourSteps = useMemo<Step[]>(
@@ -83,6 +85,9 @@ export const View$MainWindow: FC = () => {
 
       <AppBar position="relative">
         <Toolbar sx={{ justifyContent: 'space-between' }}>
+          <Button color="secondary" onClick={() => setAboutDialogOpen(true)} variant="text">
+            {`About`}
+          </Button>
           <Typography>{`Information`}</Typography>
           <Typography>{`Exercise poses`}</Typography>
           <IconButton onClick={() => setSettingDialogOpen(true)}>
@@ -125,10 +130,10 @@ export const View$MainWindow: FC = () => {
             <ExerciseGroupDisplay items={BASIC_EXERCISES.map((x) => ({ ...x }))} />
 
             <Typography sx={{ fontWeight: 900 }} variant="h2">{`Intermediate`}</Typography>
-            <ExerciseGroupDisplay items={[null]} />
+            <ExerciseGroupDisplay items={[null, null, null]} />
 
             <Typography sx={{ fontWeight: 900 }} variant="h2">{`Advanced`}</Typography>
-            <ExerciseGroupDisplay difficulty="ADVANCED" />
+            <ExerciseGroupDisplay items={[null, null, null]} />
           </Stack>
         </Stack>
       </Container>
@@ -147,6 +152,7 @@ export const View$MainWindow: FC = () => {
           <Button onClick={() => setSettingDialogOpen(false)}>{`Close`}</Button>
         </DialogActions>
       </Dialog>
+      <AboutAppDialog open={aboutDialogOpen} onClose={() => setAboutDialogOpen(false)} />
     </>
   )
 }

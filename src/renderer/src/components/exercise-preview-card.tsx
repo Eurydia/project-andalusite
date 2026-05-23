@@ -90,9 +90,10 @@ export const ExercisePreviewCard: FC<{
       setDialogTourRun(false)
     }
   }
+  const { data } = props
 
   const badge = useMemo(() => {
-    switch (props.difficulty) {
+    switch (data.difficulty) {
       case 'BASIC':
         return <Chip icon={<Whatshot />} label="BASIC" color="warning" />
       case 'INTERMEDIATE':
@@ -123,14 +124,14 @@ export const ExercisePreviewCard: FC<{
           />
         )
     }
-  }, [props.difficulty])
+  }, [data.difficulty])
 
   return (
     <>
       <Card id={props.htmlId} variant="outlined">
         <CardActionArea onClick={openDialog} disableTouchRipple>
           <CardMedia
-            image={props.thumbnailSrc}
+            image={data.thumbnailSrc}
             sx={{
               objectFit: 'contain',
               backgroundColor: (t) => t.palette.primary.light,
@@ -139,7 +140,7 @@ export const ExercisePreviewCard: FC<{
           />
 
           <CardHeader
-            title={props.name}
+            title={data.name}
             subheader={badge}
             slotProps={{
               title: {
@@ -194,7 +195,7 @@ export const ExercisePreviewCard: FC<{
                 justifyContent: 'center'
               }}
             >
-              <ReactPlayer controls loop height="100%" width="100%" src={props.videoClipSrc} />
+              <ReactPlayer controls loop height="100%" width="100%" src={data.videoSrc} />
             </Box>
           </Grid>
 
@@ -230,7 +231,7 @@ export const ExercisePreviewCard: FC<{
                       wordBreak: 'break-word'
                     }}
                   >
-                    {props.name}
+                    {data.name}
                   </Typography>
 
                   <Stack
@@ -244,7 +245,7 @@ export const ExercisePreviewCard: FC<{
                   </Stack>
                 </Stack>
 
-                <Typography data-tour="exercise-description">{props.explanation}</Typography>
+                <Typography data-tour="exercise-description">{data.explanation}</Typography>
 
                 <Toolbar
                   disableGutters
@@ -256,7 +257,7 @@ export const ExercisePreviewCard: FC<{
                   <Box component="span" data-tour="exercise-start-button">
                     <StyledRouterLinkButton
                       to="/exercise"
-                      search={{ exerciseId: props.exerciseId }}
+                      search={{ exerciseId: data.exerciseId }}
                       variant="contained"
                       startIcon={<SelfImprovementRounded />}
                       disableTouchRipple

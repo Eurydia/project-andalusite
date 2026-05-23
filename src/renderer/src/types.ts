@@ -3,6 +3,6 @@ export type ExerciseData = {
   name: string
   explanation: string
   thumbnailSrc: string
-  videoClipSrc: string
+  videoSrc: string
   difficulty: 'BASIC' | 'INTERMEDIATE' | 'ADVANCED'
 }

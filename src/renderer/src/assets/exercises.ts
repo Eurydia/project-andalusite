@@ -68,7 +68,7 @@ A squat is a lower-body exercise that strengthens the legs, hips, and core. Duri
 export const INTERMEDIATE_EXERCISES: Array<ExerciseData> = [
   {
     name: 'Downward Facing Dog',
-    difficulty: 'BASIC',
+    difficulty: 'INTERMEDIATE',
     explanation: `
 Downward Facing Dog is a popular yoga pose that stretches and strengthens the whole body, especially the shoulders, back, hamstrings, and calves. In this pose, the body forms an inverted “V” shape.
 
@@ -89,20 +89,20 @@ Downward Facing Dog is a popular yoga pose that stretches and strengthens the wh
 7. Warm up wrists and shoulders before practice
 8. Stop if you feel sharp pain in the wrists, shoulders, or lower back
 `,
-    exerciseId: 'BASIC-02',
-    thumbnailSrc: '',
+    exerciseId: 'INT-01',
+    thumbnailSrc: '/assets/images/downward-dog.png',
     videoSrc: ''
   },
   {
     soon: true,
     name: 'Lunge',
-    difficulty: 'BASIC',
+    difficulty: 'INTERMEDIATE',
     thumbnailSrc: '/assets/images/lunge.png'
   },
   {
     soon: true,
     name: 'Side Plank',
-    difficulty: 'BASIC',
+    difficulty: 'INTERMEDIATE',
     thumbnailSrc: '/assets/images/side-plank.png'
   }
 ]

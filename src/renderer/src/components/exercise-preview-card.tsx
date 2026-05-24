@@ -15,6 +15,7 @@ import Typography from '@mui/material/Typography'
 import { ExerciseData } from '@renderer/types'
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { Joyride, STATUS, type EventData, type Step } from 'react-joyride'
+import Markdown from 'react-markdown'
 import ReactPlayer from 'react-player'
 import { StyledRouterLinkButton } from './styled-router-link-button'
 
@@ -129,7 +130,7 @@ export const ExercisePreviewCard: FC<{
   return (
     <>
       <Card id={props.htmlId} variant="outlined">
-        <CardActionArea onClick={openDialog} disableTouchRipple>
+        <CardActionArea onClick={openDialog} disableTouchRipple disabled={data.soon}>
           <CardMedia
             image={data.thumbnailSrc}
             sx={{
@@ -138,9 +139,8 @@ export const ExercisePreviewCard: FC<{
               aspectRatio: '16/10'
             }}
           />
-
           <CardHeader
-            title={data.name}
+            title={`${data.name}${data.soon ? ` (coming soon!)` : ''}`}
             subheader={badge}
             slotProps={{
               title: {
@@ -155,122 +155,126 @@ export const ExercisePreviewCard: FC<{
         </CardActionArea>
       </Card>
 
-      <Dialog maxWidth="lg" open={dialogOpen} onClose={closeDialog}>
-        <Joyride
-          run={dialogTourRun}
-          continuous
-          steps={dialogTourSteps}
-          onEvent={handleDialogTourEvent}
-          options={{
-            zIndex: 2000,
-            showProgress: true,
-            buttons: ['back', 'close', 'skip', 'primary'],
-            spotlightPadding: 12,
-            backgroundColor: '#111111',
-            textColor: '#ffffff',
-            primaryColor: '#ffffff',
-            arrowColor: '#111111',
-            overlayColor: 'rgba(0, 0, 0, 0.48)'
-          }}
-        />
-
-        <Grid container sx={{ height: '75vh', overflow: 'hidden' }}>
-          <Grid
-            size={{ lg: 8 }}
-            data-tour="exercise-video-preview"
-            sx={{
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: (t) => t.palette.primary.main
+      {!data.soon && (
+        <Dialog maxWidth="lg" open={dialogOpen} onClose={closeDialog}>
+          <Joyride
+            run={dialogTourRun}
+            continuous
+            steps={dialogTourSteps}
+            onEvent={handleDialogTourEvent}
+            options={{
+              zIndex: 2000,
+              showProgress: true,
+              buttons: ['back', 'close', 'skip', 'primary'],
+              spotlightPadding: 12,
+              backgroundColor: '#111111',
+              textColor: '#ffffff',
+              primaryColor: '#ffffff',
+              arrowColor: '#111111',
+              overlayColor: 'rgba(0, 0, 0, 0.48)'
             }}
-          >
-            <Box
+          />
+
+          <Grid container sx={{ height: '75vh', overflow: 'hidden' }}>
+            <Grid
+              size={{ lg: 8 }}
+              data-tour="exercise-video-preview"
               sx={{
-                aspectRatio: '16 / 10',
-                width: '100%',
+                height: '100%',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                backgroundColor: (t) => t.palette.primary.main
               }}
             >
-              <ReactPlayer controls loop height="100%" width="100%" src={data.videoSrc} />
-            </Box>
-          </Grid>
+              <Box
+                sx={{
+                  aspectRatio: '16 / 10',
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <ReactPlayer controls loop height="100%" width="100%" src={data.videoSrc} />
+              </Box>
+            </Grid>
 
-          <Grid
-            size={{ lg: 'grow' }}
-            sx={{
-              height: '100%',
-              overflow: 'auto'
-            }}
-          >
-            <DialogContent>
-              <Stack spacing={4}>
-                <Stack spacing={2} useFlexGap sx={{ alignItems: 'flex-start' }}>
-                  <Button
-                    disableTouchRipple
-                    variant="text"
-                    startIcon={<KeyboardArrowLeftRounded />}
-                    onClick={closeDialog}
-                  >
-                    {`Back`}
-                  </Button>
+            <Grid
+              size={{ lg: 'grow' }}
+              sx={{
+                height: '100%',
+                overflow: 'auto'
+              }}
+            >
+              <DialogContent>
+                <Stack spacing={4}>
+                  <Stack spacing={2} useFlexGap sx={{ alignItems: 'flex-start' }}>
+                    <Button
+                      disableTouchRipple
+                      variant="text"
+                      startIcon={<KeyboardArrowLeftRounded />}
+                      onClick={closeDialog}
+                    >
+                      {`Back`}
+                    </Button>
 
-                  <Typography
-                    data-tour="exercise-title"
-                    variant="h2"
-                    sx={{
-                      fontWeight: 900,
-                      borderLeftColor: (t) => t.palette.primary.main,
-                      borderLeftStyle: 'solid',
-                      borderLeftWidth: 8,
-                      paddingLeft: 2,
-                      overflowWrap: 'break-word',
-                      wordBreak: 'break-word'
-                    }}
-                  >
-                    {data.name}
+                    <Typography
+                      data-tour="exercise-title"
+                      variant="h2"
+                      sx={{
+                        fontWeight: 900,
+                        borderLeftColor: (t) => t.palette.primary.main,
+                        borderLeftStyle: 'solid',
+                        borderLeftWidth: 8,
+                        paddingLeft: 2,
+                        overflowWrap: 'break-word',
+                        wordBreak: 'break-word'
+                      }}
+                    >
+                      {data.name}
+                    </Typography>
+
+                    <Stack
+                      data-tour="exercise-difficulty"
+                      direction="row"
+                      spacing={1}
+                      divider={<Typography color="textSecondary">{`\u2022`}</Typography>}
+                      sx={{ flexWrap: 'wrap', alignItems: 'center' }}
+                    >
+                      {badge}
+                    </Stack>
+                  </Stack>
+
+                  <Typography component={'div'}>
+                    <Markdown>{data.explanation}</Markdown>
                   </Typography>
 
-                  <Stack
-                    data-tour="exercise-difficulty"
-                    direction="row"
-                    spacing={1}
-                    divider={<Typography color="textSecondary">{`\u2022`}</Typography>}
-                    sx={{ flexWrap: 'wrap', alignItems: 'center' }}
+                  <Toolbar
+                    disableGutters
+                    variant="dense"
+                    sx={{
+                      gap: 1
+                    }}
                   >
-                    {badge}
-                  </Stack>
+                    <Box component="span" data-tour="exercise-start-button">
+                      <StyledRouterLinkButton
+                        to="/exercise"
+                        search={{ exerciseId: data.exerciseId }}
+                        variant="contained"
+                        startIcon={<SelfImprovementRounded />}
+                        disableTouchRipple
+                      >
+                        Start exercise
+                      </StyledRouterLinkButton>
+                    </Box>
+                  </Toolbar>
                 </Stack>
-
-                <Typography data-tour="exercise-description">{data.explanation}</Typography>
-
-                <Toolbar
-                  disableGutters
-                  variant="dense"
-                  sx={{
-                    gap: 1
-                  }}
-                >
-                  <Box component="span" data-tour="exercise-start-button">
-                    <StyledRouterLinkButton
-                      to="/exercise"
-                      search={{ exerciseId: data.exerciseId }}
-                      variant="contained"
-                      startIcon={<SelfImprovementRounded />}
-                      disableTouchRipple
-                    >
-                      Start exercise
-                    </StyledRouterLinkButton>
-                  </Box>
-                </Toolbar>
-              </Stack>
-            </DialogContent>
+              </DialogContent>
+            </Grid>
           </Grid>
-        </Grid>
-      </Dialog>
+        </Dialog>
+      )}
     </>
   )
 }

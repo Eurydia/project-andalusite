@@ -1,17 +1,10 @@
 import { Grid } from '@mui/material'
+import { ExerciseData } from '@renderer/types'
 import { FC } from 'react'
 import { ExercisePreviewCard } from './exercise-preview-card'
-import { ExercisePreviewCardSkeleton } from './exercise-preview-card.skeleton'
 
 export const ExerciseGroupDisplay: FC<{
-  items: Array<{
-    exerciseId: string
-    difficulty: 'BASIC' | 'INTERMEDIATE' | 'ADVANCED'
-    name: string
-    explanation: string
-    thumbnailSrc: string
-    videoSrc: string
-  } | null>
+  items: Array<ExerciseData>
 }> = (props) => (
   <Grid container spacing={4}>
     {props.items.map((item, i) => {
@@ -19,11 +12,7 @@ export const ExerciseGroupDisplay: FC<{
 
       return (
         <Grid size={{ lg: 4, sm: 6 }} key={exerciseCardHtmlId}>
-          {item !== null ? (
-            <ExercisePreviewCard htmlId={exerciseCardHtmlId} data={item} />
-          ) : (
-            <ExercisePreviewCardSkeleton />
-          )}
+          <ExercisePreviewCard htmlId={exerciseCardHtmlId} data={item} />
         </Grid>
       )
     })}

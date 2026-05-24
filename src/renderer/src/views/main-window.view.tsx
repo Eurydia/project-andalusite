@@ -17,7 +17,11 @@ import {
   Typography,
   useTheme
 } from '@mui/material'
-import { BASIC_EXERCISES } from '@renderer/assets/exercises'
+import {
+  ADVANCED_EXERCISES,
+  BASIC_EXERCISES,
+  INTERMEDIATE_EXERCISES
+} from '@renderer/assets/exercises'
 import { AboutAppDialog } from '@renderer/components/about-app-dialog'
 import { ExerciseGroupDisplay } from '@renderer/components/exercise-group-display'
 import { FC, useEffect, useMemo, useState } from 'react'
@@ -126,13 +130,13 @@ export const View$MainWindow: FC = () => {
 
           <Stack spacing={4} data-tour="exercise-results">
             <Typography sx={{ fontWeight: 900 }} variant="h2">{`Basic`}</Typography>
-            <ExerciseGroupDisplay items={BASIC_EXERCISES.map((x) => ({ ...x }))} />
+            <ExerciseGroupDisplay items={BASIC_EXERCISES} />
 
             <Typography sx={{ fontWeight: 900 }} variant="h2">{`Intermediate`}</Typography>
-            <ExerciseGroupDisplay items={[null, null, null]} />
+            <ExerciseGroupDisplay items={INTERMEDIATE_EXERCISES} />
 
             <Typography sx={{ fontWeight: 900 }} variant="h2">{`Advanced`}</Typography>
-            <ExerciseGroupDisplay items={[null, null, null]} />
+            <ExerciseGroupDisplay items={ADVANCED_EXERCISES} />
           </Stack>
         </Stack>
       </Container>

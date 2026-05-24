@@ -1,11 +1,10 @@
 import { KeyboardArrowLeftRounded } from '@mui/icons-material'
-import { Box, Button, Stack, Toolbar, Typography, useTheme } from '@mui/material'
+import { Box, Button, Toolbar, Typography, useTheme } from '@mui/material'
 import { StyledRouterLinkButton } from '@renderer/components/styled-router-link-button'
-import { useSynthSoundEffects } from '@renderer/hooks/use-play-feedback-sfx'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Joyride, STATUS, type EventData, type Step } from 'react-joyride'
-import { toast } from 'react-toastify'
+import z from 'zod'
 
 function stopStream(stream?: MediaStream) {
   stream?.getTracks().forEach((track) => {
@@ -43,14 +42,14 @@ async function getWebcamStream(signal: AbortSignal) {
   return stream
 }
 
-const openCreatedWindow = () =>
+const openCreatedWindow = (url: string) =>
   window.api.createWindow({
     width: 800,
     height: 600,
     title: 'Media Player',
     x: 100,
     y: 100,
-    url: 'https://www.youtube.com/embed/BPK9WNtpBgk'
+    url
   })
 
 const closeCreatedWindow = (id?: number) => {
@@ -69,7 +68,14 @@ const formatTimer = (seconds: number) => {
 }
 
 export const Route = createFileRoute('/exercise')({
+  onError: () => {
+    throw redirect({ to: '/' })
+  },
   component: RouteComponent,
+  validateSearch: z.object({
+    videoSrc: z.url(),
+    exerciseId: z.string()
+  }),
   loader: async ({ abortController }) => {
     const stream = await getWebcamStream(abortController.signal)
 
@@ -92,7 +98,7 @@ function RouteComponent() {
   const [timerSeconds, setTimerSeconds] = useState(0)
   const [timerPaused, setTimerPaused] = useState(false)
   const [tourRun, setTourRun] = useState(false)
-  const { playBad, playGood } = useSynthSoundEffects()
+  // const { playBad, playGood } = useSynthSoundEffects()
   const t = useTheme()
 
   const tourSteps = useMemo<Step[]>(
@@ -180,11 +186,13 @@ function RouteComponent() {
     }
   }, [stream])
 
+  const search = Route.useSearch()
+
   useEffect(() => {
     let active = true
 
     const createWindowOnEnter = async () => {
-      const createdWindow = await openCreatedWindow()
+      const createdWindow = await openCreatedWindow(search.videoSrc)
 
       if (!active) {
         closeCreatedWindow(createdWindow.id)
@@ -325,35 +333,13 @@ function RouteComponent() {
           {timerPaused ? `Resume` : `Pause`}
         </Button>
 
-        <Stack direction="row" spacing={1}>
-          <Button
-            data-tour="exercise-feedback-good"
-            onClick={() => {
-              toast.success('Nice form!')
-              playGood()
-            }}
-          >
-            {`Good`}
-          </Button>
-
-          <Button
-            data-tour="exercise-feedback-bad"
-            onClick={() => {
-              toast.warn('Bad form!')
-              playBad()
-            }}
-          >
-            {`Bad`}
-          </Button>
-        </Stack>
-
         <Box component="span" data-tour="exercise-video-player">
           {createdWindowOpen ? (
             <Typography sx={{ px: 1 }}>{`Player open`}</Typography>
           ) : (
             <Button
               onClick={async () => {
-                const createdWindow = await openCreatedWindow()
+                const createdWindow = await openCreatedWindow(search.videoSrc)
 
                 closedWindowRef.current = false
                 createdWindowIdRef.current = createdWindow.id

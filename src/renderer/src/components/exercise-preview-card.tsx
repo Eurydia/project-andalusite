@@ -260,7 +260,7 @@ export const ExercisePreviewCard: FC<{
                     <Box component="span" data-tour="exercise-start-button">
                       <StyledRouterLinkButton
                         to="/exercise"
-                        search={{ exerciseId: data.exerciseId }}
+                        search={{ exerciseId: data.exerciseId, videoSrc: data.videoSrc }}
                         variant="contained"
                         startIcon={<SelfImprovementRounded />}
                         disableTouchRipple

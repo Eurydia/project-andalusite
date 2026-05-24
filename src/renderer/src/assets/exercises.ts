@@ -26,7 +26,7 @@ A squat is a lower-body exercise that strengthens the legs, hips, and core. Duri
 6\. Stop if you feel sharp pain`,
     exerciseId: 'BASIC-01',
     thumbnailSrc: '/assets/images/squat.png',
-    videoSrc: ''
+    videoSrc: 'https://www.youtube.com/embed/d_xB-41ieqw'
   },
   {
     name: 'Plank',
@@ -55,7 +55,7 @@ A squat is a lower-body exercise that strengthens the legs, hips, and core. Duri
   8. Practice regularly to improve endurance and stability`,
     exerciseId: 'BASIC-02',
     thumbnailSrc: '/assets/images/plank.png',
-    videoSrc: ''
+    videoSrc: 'https://www.youtube.com/embed/v_8rMn6jxqc'
   },
   {
     soon: true,
@@ -91,7 +91,7 @@ Downward Facing Dog is a popular yoga pose that stretches and strengthens the wh
 `,
     exerciseId: 'INT-01',
     thumbnailSrc: '/assets/images/downward-dog.png',
-    videoSrc: ''
+    videoSrc: 'https://www.youtube.com/embed/p146rICRJkg'
   },
   {
     soon: true,

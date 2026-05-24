@@ -21,8 +21,13 @@ const createWindow = () => {
       contextIsolation: true,
       nodeIntegration: false,
       webSecurity: true,
-      allowRunningInsecureContent: false
+      allowRunningInsecureContent: false,
+      devTools: true
     }
+  })
+
+  mainWindow.webContents.once('did-finish-load', () => {
+    mainWindow.webContents.openDevTools({ mode: 'detach' })
   })
 
   mainWindow.on('ready-to-show', () => {

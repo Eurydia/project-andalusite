@@ -1,4 +1,4 @@
-import { KeyboardArrowLeftRounded } from '@mui/icons-material'
+import KeyboardArrowLeftRounded from '@mui/icons-material/KeyboardArrowLeftRounded'
 import { Box, Button, Toolbar, Typography, useTheme } from '@mui/material'
 import { StyledRouterLinkButton } from '@renderer/components/styled-router-link-button'
 import { useSynthSoundEffects } from '@renderer/hooks/use-play-feedback-sfx'

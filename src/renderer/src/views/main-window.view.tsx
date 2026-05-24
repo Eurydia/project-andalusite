@@ -1,4 +1,6 @@
-import { HelpRounded, SearchRounded, SettingsRounded } from '@mui/icons-material'
+import HelpRounded from '@mui/icons-material/HelpRounded'
+import SearchRounded from '@mui/icons-material/SearchRounded'
+import SettingsRounded from '@mui/icons-material/SettingsRounded'
 import {
   AppBar,
   Button,

@@ -25,8 +25,8 @@ A squat is a lower-body exercise that strengthens the legs, hips, and core. Duri
 5\. Practice proper technique slowly  
 6\. Stop if you feel sharp pain`,
     exerciseId: 'squat',
-    thumbnailSrc: '/assets/images/squat.png',
-    videoSrc: 'https://www.youtube.com/embed/d_xB-41ieqw'
+    thumbnailSrc: './assets/images/squat.png',
+    videoSrc: 'https://www.youtube.com/watch?v=d_xB-41ieqw'
   },
   {
     name: 'Plank',
@@ -54,14 +54,14 @@ A squat is a lower-body exercise that strengthens the legs, hips, and core. Duri
   7. Stop if you feel sharp pain in the back, shoulders, or wrists
   8. Practice regularly to improve endurance and stability`,
     exerciseId: 'plank',
-    thumbnailSrc: '/assets/images/plank.png',
-    videoSrc: 'https://www.youtube.com/embed/v_8rMn6jxqc'
+    thumbnailSrc: './assets/images/plank.png',
+    videoSrc: 'https://www.youtube.com/watch?v=v_8rMn6jxqc'
   },
   {
     soon: true,
     difficulty: 'BASIC',
     name: 'Glute bridge',
-    thumbnailSrc: '/assets/images/glute-bridge.png'
+    thumbnailSrc: './assets/images/glute-bridge.png'
   }
 ]
 
@@ -90,20 +90,20 @@ Downward Facing Dog is a popular yoga pose that stretches and strengthens the wh
 8. Stop if you feel sharp pain in the wrists, shoulders, or lower back
 `,
     exerciseId: 'INT-01',
-    thumbnailSrc: '/assets/images/downward-dog.png',
-    videoSrc: 'https://www.youtube.com/embed/p146rICRJkg'
+    thumbnailSrc: './assets/images/downward-dog.png',
+    videoSrc: 'https://www.youtube.com/watch?v=p146rICRJkg'
   },
   {
     soon: true,
     name: 'Lunge',
     difficulty: 'INTERMEDIATE',
-    thumbnailSrc: '/assets/images/lunge.png'
+    thumbnailSrc: './assets/images/lunge.png'
   },
   {
     soon: true,
     name: 'Side Plank',
     difficulty: 'INTERMEDIATE',
-    thumbnailSrc: '/assets/images/side-plank.png'
+    thumbnailSrc: './assets/images/side-plank.png'
   }
 ]
 
@@ -112,18 +112,18 @@ export const ADVANCED_EXERCISES: Array<ExerciseData> = [
     soon: true,
     difficulty: 'ADVANCED',
     name: 'Pistol Squat',
-    thumbnailSrc: '/assets/images/pistol-squat.png'
+    thumbnailSrc: './assets/images/pistol-squat.png'
   },
   {
     soon: true,
     difficulty: 'ADVANCED',
     name: 'Crow pose',
-    thumbnailSrc: '/assets/images/crow-pose.png'
+    thumbnailSrc: './assets/images/crow-pose.png'
   },
   {
     soon: true,
     difficulty: 'ADVANCED',
     name: 'Handstand',
-    thumbnailSrc: '/assets/images/handstand.png'
+    thumbnailSrc: './assets/images/handstand.png'
   }
 ]

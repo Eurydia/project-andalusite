@@ -1,4 +1,5 @@
-import { KeyboardArrowLeftRounded, SelfImprovementRounded } from '@mui/icons-material'
+import KeyboardArrowLeftRounded from '@mui/icons-material/KeyboardArrowLeftRounded'
+import SelfImprovementRounded from '@mui/icons-material/SelfImprovementRounded'
 import Whatshot from '@mui/icons-material/Whatshot'
 import { Button, Toolbar } from '@mui/material'
 import Box from '@mui/material/Box'

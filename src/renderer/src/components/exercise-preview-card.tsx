@@ -14,7 +14,7 @@ import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import { ExerciseData } from '@renderer/types'
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
-import { STATUS, type EventData, type Step } from 'react-joyride'
+import { Joyride, STATUS, type EventData, type Step } from 'react-joyride'
 import Markdown from 'react-markdown'
 import ReactPlayer from 'react-player'
 import { StyledRouterLinkButton } from './styled-router-link-button'
@@ -157,7 +157,7 @@ export const ExercisePreviewCard: FC<{
 
       {!data.soon && (
         <Dialog maxWidth="lg" open={dialogOpen} onClose={closeDialog} scroll="body">
-          {/* <Joyride
+          <Joyride
             run={dialogTourRun}
             continuous
             steps={dialogTourSteps}
@@ -173,7 +173,7 @@ export const ExercisePreviewCard: FC<{
               arrowColor: '#111111',
               overlayColor: 'rgba(0, 0, 0, 0.48)'
             }}
-          /> */}
+          />
 
           <Grid container sx={{ height: '75vh', overflow: 'hidden' }}>
             <Grid
@@ -246,10 +246,6 @@ export const ExercisePreviewCard: FC<{
                     </Stack>
                   </Stack>
 
-                  <Typography component={'div'}>
-                    <Markdown>{data.explanation}</Markdown>
-                  </Typography>
-
                   <Toolbar
                     disableGutters
                     variant="dense"
@@ -269,6 +265,9 @@ export const ExercisePreviewCard: FC<{
                       </StyledRouterLinkButton>
                     </Box>
                   </Toolbar>
+                  <Typography component={'div'}>
+                    <Markdown>{data.explanation}</Markdown>
+                  </Typography>
                 </Stack>
               </DialogContent>
             </Grid>

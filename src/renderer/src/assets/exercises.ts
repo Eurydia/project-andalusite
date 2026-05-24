@@ -8,7 +8,7 @@ export const BASIC_EXERCISES: Array<ExerciseData> = [
 
 A squat is a lower-body exercise that strengthens the legs, hips, and core. During a squat, you bend your knees and lower your hips as if sitting in a chair, then return to a standing position. 
 
-## **Common Pain Areas Caused by Wrong Squat Form**
+**Common Pain Areas Caused by Wrong Squat Form**
 
 1\. Knee Pain   
 2\. Lower Back Pain   
@@ -16,7 +16,7 @@ A squat is a lower-body exercise that strengthens the legs, hips, and core. Duri
 4\. Ankle Pain   
 5\. Groin Pain
 
-### **Tips to Prevent Pain**
+**Tips to Prevent Pain**
 
 1\. Warm up before exercising  
 2\. Improve ankle and hip mobility  
@@ -78,7 +78,7 @@ Downward Facing Dog is a popular yoga pose that stretches and strengthens the wh
 3\. Lower Back Pain  
 4\. Neck Pain
 
-## **Tips for a Safe and Effective Downward Facing Dog**
+**Tips for a Safe and Effective Downward Facing Dog**
 
 1. Bend your knees slightly if hamstrings feel tight
 2. Keep your back straight instead of forcing heels to touch the floor

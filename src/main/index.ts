@@ -2,6 +2,7 @@ import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { app, BrowserWindow, shell } from 'electron'
 import { join } from 'path'
 import icon from '../../resources/icon.png?asset'
+import { registerPoseIpc } from './modules/onnx'
 import { registerPersistIpc } from './modules/persist'
 import { registerCreatedWindowIpc } from './modules/sub-window-manager'
 
@@ -49,6 +50,7 @@ app.whenReady().then(() => {
 
   registerCreatedWindowIpc()
   registerPersistIpc()
+  registerPoseIpc()
   createWindow()
 
   app.on('activate', () => {

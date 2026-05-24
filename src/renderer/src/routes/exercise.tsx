@@ -1,10 +1,11 @@
 import { KeyboardArrowLeftRounded } from '@mui/icons-material'
 import { Box, Button, Toolbar, Typography, useTheme } from '@mui/material'
 import { StyledRouterLinkButton } from '@renderer/components/styled-router-link-button'
+import { useSynthSoundEffects } from '@renderer/hooks/use-play-feedback-sfx'
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import * as ort from 'onnxruntime-web/wasm'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { STATUS, type EventData, type Step } from 'react-joyride'
+import { Joyride, STATUS, type EventData, type Step } from 'react-joyride'
+import { toast, type Id } from 'react-toastify'
 import z from 'zod'
 
 type Keypoint = {
@@ -13,17 +14,36 @@ type Keypoint = {
   score: number
 }
 
-type PoseResult = {
-  keypoints: Keypoint[]
+type SquatMetrics = {
+  leftKneeAngle: number
+  rightKneeAngle: number
+  averageKneeAngle: number
+  stanceRatio: number
+  squatStatus: 'Standing' | 'Good Squat' | 'Too Deep'
+  stanceStatus: 'Normal' | 'Too Narrow' | 'Too Wide'
 }
 
-type Letterbox = {
-  scale: number
-  padX: number
-  padY: number
-  sourceWidth: number
-  sourceHeight: number
+type PlankMetrics = {
+  leftHipAngle: number
+  rightHipAngle: number
+  plankAngle: number
+  plankStatus: 'Good Plank' | 'Hips Too Low' | 'Hips Too High'
 }
+
+type PoseFeedback =
+  | {
+      kind: 'good'
+      code: 'good'
+    }
+  | {
+      kind: 'bad'
+      code: string
+      message: string
+    }
+
+const POSE_TOAST_ID = 'pose-feedback-toast'
+const POSE_PRIMARY_COLOR = '#FFA536'
+const POSE_BACKGROUND_COLOR = '#fffdf5'
 
 const COCO_SKELETON: Array<[number, number]> = [
   [0, 1],
@@ -105,193 +125,307 @@ const formatTimer = (seconds: number) => {
   return `${minutes}:${remainingSeconds}`
 }
 
-class YoloPoseOnnxRunner {
-  private session?: ort.InferenceSession
+function calculateAngle(a: Keypoint, b: Keypoint, c: Keypoint) {
+  const baX = a.x - b.x
+  const baY = a.y - b.y
+  const bcX = c.x - b.x
+  const bcY = c.y - b.y
 
-  constructor(
-    private readonly options: {
-      modelUrl?: string
-      inputSize?: number
-      confidenceThreshold?: number
-      keypointThreshold?: number
-    } = {}
-  ) {}
+  const baLength = Math.hypot(baX, baY)
+  const bcLength = Math.hypot(bcX, bcY)
 
-  async load() {
-    if (this.session) {
-      return
-    }
-
-    this.session = await ort.InferenceSession.create(
-      this.options.modelUrl ?? '/models/yolo26n-pose.onnx',
-      {
-        executionProviders: ['wasm']
-      }
-    )
+  if (baLength === 0 || bcLength === 0) {
+    return 0
   }
 
-  async runVideoFrame(video: HTMLVideoElement): Promise<PoseResult | null> {
-    await this.load()
+  const cosine = (baX * bcX + baY * bcY) / (baLength * bcLength)
+  const clamped = Math.max(-1, Math.min(1, cosine))
 
-    if (!this.session) {
-      return null
-    }
+  return (Math.acos(clamped) * 180) / Math.PI
+}
 
-    if (!video.videoWidth || !video.videoHeight) {
-      return null
-    }
+function calculateDistance(a: Keypoint, b: Keypoint) {
+  return Math.hypot(a.x - b.x, a.y - b.y)
+}
 
-    const { tensor, letterbox } = this.preprocess(video)
-
-    const inputName = this.session.inputNames[0]
-    const outputName = this.session.outputNames[0]
-
-    const outputs = await this.session.run({
-      [inputName]: tensor
-    })
-
-    const output = outputs[outputName]
-    const keypoints = this.parseBestPose(output, letterbox)
-
-    if (!keypoints) {
-      return null
-    }
-
-    return {
-      keypoints
-    }
+function getAverageScore(keypoints: Keypoint[]) {
+  if (keypoints.length === 0) {
+    return 0
   }
 
-  private preprocess(video: HTMLVideoElement) {
-    const inputSize = this.options.inputSize ?? 640
+  return keypoints.reduce((total, point) => total + point.score, 0) / keypoints.length
+}
 
-    const sourceWidth = video.videoWidth
-    const sourceHeight = video.videoHeight
+function getSquatMetrics(keypoints: Keypoint[]): SquatMetrics | null {
+  const leftShoulder = keypoints[5]
+  const rightShoulder = keypoints[6]
+  const leftHip = keypoints[11]
+  const rightHip = keypoints[12]
+  const leftKnee = keypoints[13]
+  const rightKnee = keypoints[14]
+  const leftAnkle = keypoints[15]
+  const rightAnkle = keypoints[16]
 
-    const scale = Math.min(inputSize / sourceWidth, inputSize / sourceHeight)
-    const resizedWidth = Math.round(sourceWidth * scale)
-    const resizedHeight = Math.round(sourceHeight * scale)
-
-    const padX = Math.floor((inputSize - resizedWidth) / 2)
-    const padY = Math.floor((inputSize - resizedHeight) / 2)
-
-    const canvas = document.createElement('canvas')
-    canvas.width = inputSize
-    canvas.height = inputSize
-
-    const ctx = canvas.getContext('2d', {
-      willReadFrequently: true
-    })
-
-    if (!ctx) {
-      throw new Error('Could not create preprocessing canvas context')
-    }
-
-    ctx.fillStyle = 'rgb(114, 114, 114)'
-    ctx.fillRect(0, 0, inputSize, inputSize)
-
-    ctx.drawImage(video, 0, 0, sourceWidth, sourceHeight, padX, padY, resizedWidth, resizedHeight)
-
-    const imageData = ctx.getImageData(0, 0, inputSize, inputSize).data
-    const pixels = inputSize * inputSize
-    const input = new Float32Array(3 * pixels)
-
-    for (let i = 0; i < pixels; i++) {
-      const rgbaIndex = i * 4
-
-      input[i] = imageData[rgbaIndex] / 255
-      input[pixels + i] = imageData[rgbaIndex + 1] / 255
-      input[pixels * 2 + i] = imageData[rgbaIndex + 2] / 255
-    }
-
-    return {
-      tensor: new ort.Tensor('float32', input, [1, 3, inputSize, inputSize]),
-      letterbox: {
-        scale,
-        padX,
-        padY,
-        sourceWidth,
-        sourceHeight
-      } satisfies Letterbox
-    }
+  if (
+    !leftShoulder ||
+    !rightShoulder ||
+    !leftHip ||
+    !rightHip ||
+    !leftKnee ||
+    !rightKnee ||
+    !leftAnkle ||
+    !rightAnkle
+  ) {
+    return null
   }
 
-  private parseBestPose(output: ort.Tensor, letterbox: Letterbox): Keypoint[] | null {
-    const data = output.data as Float32Array
-    const dims = output.dims
+  const leftKneeAngle = calculateAngle(leftHip, leftKnee, leftAnkle)
+  const rightKneeAngle = calculateAngle(rightHip, rightKnee, rightAnkle)
+  const averageKneeAngle = (leftKneeAngle + rightKneeAngle) / 2
 
-    if (dims.length !== 3) {
-      throw new Error(`Unsupported YOLO output shape: ${dims.join('x')}`)
-    }
+  const shoulderWidth = calculateDistance(leftShoulder, rightShoulder)
+  const ankleWidth = calculateDistance(leftAnkle, rightAnkle)
+  const stanceRatio = shoulderWidth === 0 ? 0 : ankleWidth / shoulderWidth
 
-    const dim1 = dims[1]
-    const dim2 = dims[2]
+  let squatStatus: SquatMetrics['squatStatus'] = 'Standing'
 
-    const channelsFirst = dim1 < dim2
-    const itemSize = channelsFirst ? dim1 : dim2
-    const candidateCount = channelsFirst ? dim2 : dim1
+  if (averageKneeAngle < 130) {
+    squatStatus = 'Good Squat'
+  }
 
-    if (itemSize < 56) {
-      throw new Error(`Expected YOLO pose item size >= 56, got ${itemSize}`)
-    }
+  if (averageKneeAngle < 80) {
+    squatStatus = 'Too Deep'
+  }
 
-    const get = (candidateIndex: number, valueIndex: number) => {
-      if (channelsFirst) {
-        return data[valueIndex * candidateCount + candidateIndex]
-      }
+  let stanceStatus: SquatMetrics['stanceStatus'] = 'Normal'
 
-      return data[candidateIndex * itemSize + valueIndex]
-    }
+  if (stanceRatio < 0.8) {
+    stanceStatus = 'Too Narrow'
+  } else if (stanceRatio > 1.5) {
+    stanceStatus = 'Too Wide'
+  }
 
-    const confidenceThreshold = this.options.confidenceThreshold ?? 0.25
-
-    let bestScore = -Infinity
-    let bestKeypoints: Keypoint[] | null = null
-
-    for (let i = 0; i < candidateCount; i++) {
-      const boxScore = get(i, 4)
-
-      if (boxScore < confidenceThreshold) {
-        continue
-      }
-
-      if (boxScore <= bestScore) {
-        continue
-      }
-
-      const keypoints: Keypoint[] = []
-
-      for (let k = 0; k < 17; k++) {
-        const base = 5 + k * 3
-
-        const modelX = get(i, base)
-        const modelY = get(i, base + 1)
-        const score = get(i, base + 2)
-
-        const x = (modelX - letterbox.padX) / letterbox.scale
-        const y = (modelY - letterbox.padY) / letterbox.scale
-
-        keypoints.push({
-          x: Math.max(0, Math.min(letterbox.sourceWidth, x)),
-          y: Math.max(0, Math.min(letterbox.sourceHeight, y)),
-          score
-        })
-      }
-
-      bestScore = boxScore
-      bestKeypoints = keypoints
-    }
-
-    return bestKeypoints
+  return {
+    leftKneeAngle,
+    rightKneeAngle,
+    averageKneeAngle,
+    stanceRatio,
+    squatStatus,
+    stanceStatus
   }
 }
 
-function drawPoseOverlay(ctx: CanvasRenderingContext2D, keypoints: Keypoint[]) {
-  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+function getPlankMetrics(keypoints: Keypoint[]): PlankMetrics | null {
+  const leftShoulder = keypoints[5]
+  const rightShoulder = keypoints[6]
+  const leftHip = keypoints[11]
+  const rightHip = keypoints[12]
+  const leftAnkle = keypoints[15]
+  const rightAnkle = keypoints[16]
+
+  if (!leftShoulder || !rightShoulder || !leftHip || !rightHip || !leftAnkle || !rightAnkle) {
+    return null
+  }
+
+  const leftHipAngle = calculateAngle(leftShoulder, leftHip, leftAnkle)
+  const rightHipAngle = calculateAngle(rightShoulder, rightHip, rightAnkle)
+  const plankAngle = (leftHipAngle + rightHipAngle) / 2
+
+  let plankStatus: PlankMetrics['plankStatus'] = 'Good Plank'
+
+  if (plankAngle < 165) {
+    plankStatus = 'Hips Too Low'
+  } else if (plankAngle > 190) {
+    plankStatus = 'Hips Too High'
+  }
+
+  return {
+    leftHipAngle,
+    rightHipAngle,
+    plankAngle,
+    plankStatus
+  }
+}
+
+function getSquatFeedback(keypoints: Keypoint[], metrics: SquatMetrics | null): PoseFeedback {
+  if (keypoints.length === 0) {
+    return {
+      kind: 'bad',
+      code: 'no-pose',
+      message: 'Move into frame.'
+    }
+  }
+
+  if (getAverageScore(keypoints) < 0.2) {
+    return {
+      kind: 'bad',
+      code: 'low-confidence',
+      message: 'Move closer to the camera.'
+    }
+  }
+
+  if (!metrics) {
+    return {
+      kind: 'bad',
+      code: 'squat-missing-body',
+      message: 'Keep your full body visible.'
+    }
+  }
+
+  if (metrics.stanceStatus === 'Too Narrow') {
+    return {
+      kind: 'bad',
+      code: 'squat-stance-narrow',
+      message: 'Widen your stance.'
+    }
+  }
+
+  if (metrics.stanceStatus === 'Too Wide') {
+    return {
+      kind: 'bad',
+      code: 'squat-stance-wide',
+      message: 'Narrow your stance.'
+    }
+  }
+
+  if (metrics.squatStatus === 'Too Deep') {
+    return {
+      kind: 'bad',
+      code: 'squat-too-deep',
+      message: 'Do not drop too low.'
+    }
+  }
+
+  if (metrics.squatStatus === 'Standing') {
+    return {
+      kind: 'bad',
+      code: 'squat-not-low-enough',
+      message: 'Squat lower.'
+    }
+  }
+
+  return {
+    kind: 'good',
+    code: 'good'
+  }
+}
+
+function getPlankFeedback(keypoints: Keypoint[], metrics: PlankMetrics | null): PoseFeedback {
+  if (keypoints.length === 0) {
+    return {
+      kind: 'bad',
+      code: 'no-pose',
+      message: 'Move into frame.'
+    }
+  }
+
+  if (getAverageScore(keypoints) < 0.2) {
+    return {
+      kind: 'bad',
+      code: 'low-confidence',
+      message: 'Move closer to the camera.'
+    }
+  }
+
+  if (!metrics) {
+    return {
+      kind: 'bad',
+      code: 'plank-missing-body',
+      message: 'Keep your shoulders, hips, and ankles visible.'
+    }
+  }
+
+  if (metrics.plankStatus === 'Hips Too Low') {
+    return {
+      kind: 'bad',
+      code: 'plank-hips-low',
+      message: 'Lift your hips.'
+    }
+  }
+
+  if (metrics.plankStatus === 'Hips Too High') {
+    return {
+      kind: 'bad',
+      code: 'plank-hips-high',
+      message: 'Lower your hips.'
+    }
+  }
+
+  return {
+    kind: 'good',
+    code: 'good'
+  }
+}
+
+function syncOverlayCanvas(canvas: HTMLCanvasElement) {
+  const rect = canvas.getBoundingClientRect()
+  const dpr = window.devicePixelRatio || 1
+
+  const width = Math.max(1, Math.round(rect.width * dpr))
+  const height = Math.max(1, Math.round(rect.height * dpr))
+
+  if (canvas.width !== width) {
+    canvas.width = width
+  }
+
+  if (canvas.height !== height) {
+    canvas.height = height
+  }
+
+  const ctx = canvas.getContext('2d')
+
+  if (!ctx) {
+    return null
+  }
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+
+  return {
+    ctx,
+    cssWidth: rect.width,
+    cssHeight: rect.height
+  }
+}
+
+function getContainedVideoRect(video: HTMLVideoElement, cssWidth: number, cssHeight: number) {
+  const scale = Math.min(cssWidth / video.videoWidth, cssHeight / video.videoHeight)
+  const width = video.videoWidth * scale
+  const height = video.videoHeight * scale
+
+  return {
+    x: (cssWidth - width) / 2,
+    y: (cssHeight - height) / 2,
+    width,
+    height,
+    scale
+  }
+}
+
+function drawPoseOverlay(
+  canvas: HTMLCanvasElement,
+  video: HTMLVideoElement,
+  keypoints: Keypoint[]
+) {
+  const synced = syncOverlayCanvas(canvas)
+
+  if (!synced || !video.videoWidth || !video.videoHeight) {
+    return
+  }
+
+  const { ctx, cssWidth, cssHeight } = synced
+  const videoRect = getContainedVideoRect(video, cssWidth, cssHeight)
+
+  ctx.clearRect(0, 0, cssWidth, cssHeight)
+
+  const toOverlayPoint = (point: Keypoint) => ({
+    x: videoRect.x + point.x * videoRect.scale,
+    y: videoRect.y + point.y * videoRect.scale,
+    score: point.score
+  })
 
   ctx.lineWidth = 4
-  ctx.strokeStyle = '#00e676'
-  ctx.fillStyle = '#ff1744'
+  ctx.strokeStyle = POSE_PRIMARY_COLOR
+  ctx.fillStyle = POSE_PRIMARY_COLOR
 
   for (const [from, to] of COCO_SKELETON) {
     const a = keypoints[from]
@@ -305,9 +439,12 @@ function drawPoseOverlay(ctx: CanvasRenderingContext2D, keypoints: Keypoint[]) {
       continue
     }
 
+    const overlayA = toOverlayPoint(a)
+    const overlayB = toOverlayPoint(b)
+
     ctx.beginPath()
-    ctx.moveTo(a.x, a.y)
-    ctx.lineTo(b.x, b.y)
+    ctx.moveTo(overlayA.x, overlayA.y)
+    ctx.lineTo(overlayB.x, overlayB.y)
     ctx.stroke()
   }
 
@@ -316,10 +453,28 @@ function drawPoseOverlay(ctx: CanvasRenderingContext2D, keypoints: Keypoint[]) {
       continue
     }
 
+    const overlayPoint = toOverlayPoint(point)
+
     ctx.beginPath()
-    ctx.arc(point.x, point.y, 5, 0, Math.PI * 2)
+    ctx.arc(overlayPoint.x, overlayPoint.y, 7, 0, Math.PI * 2)
+    ctx.fillStyle = POSE_BACKGROUND_COLOR
+    ctx.fill()
+
+    ctx.beginPath()
+    ctx.arc(overlayPoint.x, overlayPoint.y, 5, 0, Math.PI * 2)
+    ctx.fillStyle = POSE_PRIMARY_COLOR
     ctx.fill()
   }
+}
+
+function clearPoseOverlay(canvas: HTMLCanvasElement) {
+  const synced = syncOverlayCanvas(canvas)
+
+  if (!synced) {
+    return
+  }
+
+  synced.ctx.clearRect(0, 0, synced.cssWidth, synced.cssHeight)
 }
 
 export const Route = createFileRoute('/exercise')({
@@ -346,22 +501,61 @@ export const Route = createFileRoute('/exercise')({
 function RouteComponent() {
   const { stream } = Route.useLoaderData()
   const search = Route.useSearch()
+  const t = useTheme()
+  const { playGood, playBad } = useSynthSoundEffects()
 
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
-  const runnerRef = useRef<YoloPoseOnnxRunner | null>(null)
-
+  const frameCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const createdWindowIdRef = useRef<number | undefined>(undefined)
   const closedWindowRef = useRef(false)
+  const feedbackToastIdRef = useRef<Id | null>(null)
+  const feedbackCodeRef = useRef<string | null>(null)
 
   const [createdWindowId, setCreatedWindowId] = useState<number | undefined>(undefined)
   const [createdWindowOpen, setCreatedWindowOpen] = useState(false)
   const [timerSeconds, setTimerSeconds] = useState(0)
   const [timerPaused, setTimerPaused] = useState(false)
   const [tourRun, setTourRun] = useState(false)
-  const [poseResult, setPoseResult] = useState<PoseResult | null>(null)
+  const [keypoints, setKeypoints] = useState<Keypoint[]>([])
 
-  const t = useTheme()
+  const exerciseKind = useMemo(() => {
+    const value = search.exerciseId.toLowerCase()
+
+    if (value.includes('squat')) {
+      return 'squat'
+    }
+
+    if (value.includes('plank')) {
+      return 'plank'
+    }
+
+    return 'plank'
+  }, [search.exerciseId])
+
+  const squatMetrics = useMemo(() => {
+    if (exerciseKind !== 'squat') {
+      return null
+    }
+
+    return getSquatMetrics(keypoints)
+  }, [exerciseKind, keypoints])
+
+  const plankMetrics = useMemo(() => {
+    if (exerciseKind !== 'plank') {
+      return null
+    }
+
+    return getPlankMetrics(keypoints)
+  }, [exerciseKind, keypoints])
+
+  const feedback = useMemo<PoseFeedback>(() => {
+    if (exerciseKind === 'squat') {
+      return getSquatFeedback(keypoints, squatMetrics)
+    }
+
+    return getPlankFeedback(keypoints, plankMetrics)
+  }, [exerciseKind, keypoints, plankMetrics, squatMetrics])
 
   const tourSteps = useMemo<Step[]>(
     () => [
@@ -399,6 +593,57 @@ function RouteComponent() {
     ],
     []
   )
+
+  useEffect(() => {
+    if (feedback.kind === 'good') {
+      if (feedbackCodeRef.current !== null && feedbackCodeRef.current !== 'good') {
+        void playGood()
+      }
+
+      feedbackCodeRef.current = 'good'
+
+      if (feedbackToastIdRef.current !== null) {
+        toast.dismiss(feedbackToastIdRef.current)
+        feedbackToastIdRef.current = null
+      }
+
+      return
+    }
+
+    if (feedbackToastIdRef.current === null || !toast.isActive(feedbackToastIdRef.current)) {
+      feedbackToastIdRef.current = toast.warning(feedback.message, {
+        toastId: POSE_TOAST_ID,
+        autoClose: false,
+        closeOnClick: false,
+        closeButton: false,
+        draggable: false,
+        pauseOnFocusLoss: false,
+        pauseOnHover: false
+      })
+
+      feedbackCodeRef.current = feedback.code
+      void playBad()
+
+      return
+    }
+
+    if (feedbackCodeRef.current !== feedback.code) {
+      toast.update(feedbackToastIdRef.current, {
+        render: feedback.message,
+        type: 'warning',
+        autoClose: false,
+        closeOnClick: false,
+        closeButton: false,
+        draggable: false,
+        pauseOnFocusLoss: false,
+        pauseOnHover: false,
+        isLoading: false
+      })
+
+      feedbackCodeRef.current = feedback.code
+      void playBad()
+    }
+  }, [feedback, playBad, playGood])
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -442,98 +687,117 @@ function RouteComponent() {
       return
     }
 
-    let disposed = false
+    const frameCanvas = document.createElement('canvas')
+    const frameCtx = frameCanvas.getContext('2d', { willReadFrequently: true })
+
+    frameCanvasRef.current = frameCanvas
+    video.srcObject = stream
+
+    let active = true
     let rafId = 0
     let runningInference = false
 
-    video.srcObject = stream
-
-    const syncCanvasSize = () => {
+    const syncFrameCanvasSize = () => {
       if (!video.videoWidth || !video.videoHeight) {
         return
       }
 
-      if (canvas.width !== video.videoWidth) {
-        canvas.width = video.videoWidth
+      if (frameCanvas.width !== video.videoWidth) {
+        frameCanvas.width = video.videoWidth
       }
 
-      if (canvas.height !== video.videoHeight) {
-        canvas.height = video.videoHeight
+      if (frameCanvas.height !== video.videoHeight) {
+        frameCanvas.height = video.videoHeight
       }
+
+      syncOverlayCanvas(canvas)
     }
 
-    const start = async () => {
-      runnerRef.current = new YoloPoseOnnxRunner({
-        modelUrl: '/models/yolo26n-pose.onnx',
-        inputSize: 640,
-        confidenceThreshold: 0.25,
-        keypointThreshold: 0.2
+    const runFrame = async () => {
+      if (!active || !frameCtx) {
+        return
+      }
+
+      if (!video.videoWidth || !video.videoHeight) {
+        return
+      }
+
+      syncFrameCanvasSize()
+
+      frameCtx.drawImage(video, 0, 0, frameCanvas.width, frameCanvas.height)
+
+      const imageData = frameCtx.getImageData(0, 0, frameCanvas.width, frameCanvas.height)
+
+      const result = await window.api.runPoseFrame({
+        rgba: imageData.data,
+        width: imageData.width,
+        height: imageData.height
       })
 
-      await runnerRef.current.load()
-
-      if (disposed) {
+      if (!active) {
         return
       }
 
-      await video.play()
-      syncCanvasSize()
+      const nextKeypoints = Array.isArray(result) ? result : []
 
-      const ctx = canvas.getContext('2d')
+      setKeypoints(nextKeypoints)
 
-      if (!ctx) {
-        return
+      if (nextKeypoints.length > 0) {
+        drawPoseOverlay(canvas, video, nextKeypoints)
+      } else {
+        clearPoseOverlay(canvas)
       }
-
-      const tick = async () => {
-        if (disposed) {
-          return
-        }
-
-        syncCanvasSize()
-
-        if (!runningInference && runnerRef.current && video.readyState >= 2) {
-          runningInference = true
-
-          try {
-            const result = await runnerRef.current.runVideoFrame(video)
-
-            if (result) {
-              setPoseResult(result)
-              drawPoseOverlay(ctx, result.keypoints)
-            } else {
-              setPoseResult(null)
-              ctx.clearRect(0, 0, canvas.width, canvas.height)
-            }
-          } finally {
-            runningInference = false
-          }
-        }
-
-        rafId = requestAnimationFrame(tick)
-      }
-
-      tick()
     }
 
-    video.addEventListener('loadedmetadata', syncCanvasSize)
-    video.addEventListener('resize', syncCanvasSize)
+    const tick = async () => {
+      if (!active) {
+        return
+      }
 
-    void start()
+      if (!runningInference && video.readyState >= 2) {
+        runningInference = true
+
+        try {
+          await runFrame()
+        } finally {
+          runningInference = false
+        }
+      }
+
+      rafId = window.requestAnimationFrame(tick)
+    }
+
+    video.addEventListener('loadedmetadata', syncFrameCanvasSize)
+    video.addEventListener('resize', syncFrameCanvasSize)
+    window.addEventListener('resize', syncFrameCanvasSize)
+
+    void video.play().then(() => {
+      syncFrameCanvasSize()
+      tick()
+    })
 
     return () => {
-      disposed = true
-      cancelAnimationFrame(rafId)
+      active = false
+      window.cancelAnimationFrame(rafId)
 
-      video.removeEventListener('loadedmetadata', syncCanvasSize)
-      video.removeEventListener('resize', syncCanvasSize)
+      video.removeEventListener('loadedmetadata', syncFrameCanvasSize)
+      video.removeEventListener('resize', syncFrameCanvasSize)
+      window.removeEventListener('resize', syncFrameCanvasSize)
 
-      const ctx = canvas.getContext('2d')
-      ctx?.clearRect(0, 0, canvas.width, canvas.height)
+      clearPoseOverlay(canvas)
 
       video.pause()
       video.srcObject = null
-      setPoseResult(null)
+
+      frameCanvasRef.current = null
+      setKeypoints([])
+
+      if (feedbackToastIdRef.current !== null) {
+        toast.dismiss(feedbackToastIdRef.current)
+        feedbackToastIdRef.current = null
+      }
+
+      feedbackCodeRef.current = null
     }
   }, [stream])
 
@@ -548,6 +812,7 @@ function RouteComponent() {
         return
       }
 
+      closedWindowRef.current = false
       createdWindowIdRef.current = createdWindow.id
       setCreatedWindowId(createdWindow.id)
       setCreatedWindowOpen(true)
@@ -615,7 +880,7 @@ function RouteComponent() {
 
   return (
     <Box sx={{ height: '100vh', overflow: 'hidden', position: 'relative', background: 'black' }}>
-      {/* <Joyride
+      <Joyride
         run={tourRun}
         continuous
         steps={tourSteps}
@@ -631,7 +896,7 @@ function RouteComponent() {
           arrowColor: '#111111',
           overlayColor: 'rgba(0, 0, 0, 0.48)'
         }}
-      /> */}
+      />
 
       <Box
         data-tour="exercise-camera-preview"
@@ -664,26 +929,9 @@ function RouteComponent() {
             inset: 0,
             width: '100%',
             height: '100%',
-            objectFit: 'contain',
             pointerEvents: 'none'
           }}
         />
-      </Box>
-
-      <Box
-        sx={{
-          position: 'fixed',
-          top: 16,
-          left: 16,
-          zIndex: 10,
-          px: 2,
-          py: 1,
-          borderRadius: 2,
-          bgcolor: 'rgba(0, 0, 0, 0.72)',
-          color: 'white'
-        }}
-      >
-        <Typography variant="body2">{`Keypoints: ${poseResult?.keypoints.length ?? 0}`}</Typography>
       </Box>
 
       <Toolbar

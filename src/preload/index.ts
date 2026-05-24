@@ -19,7 +19,14 @@ const api = {
   windowExists: (id: number) =>
     ipcRenderer.invoke('created-window:exists', id) as Promise<{
       exists: boolean
-    }>
+    }>,
+
+  runPoseFrame: (payload: { rgba: Uint8ClampedArray; width: number; height: number }) =>
+    ipcRenderer.invoke('pose:run-frame', payload) as Promise<Array<{
+      x: number
+      y: number
+      score: number
+    }> | null>
 }
 
 try {

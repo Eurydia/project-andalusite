@@ -1,4 +1,5 @@
-import { ipcMain } from 'electron'
+import { app, ipcMain } from 'electron'
+import { existsSync } from 'fs'
 import * as ort from 'onnxruntime-node'
 import { join } from 'path'
 
@@ -8,85 +9,115 @@ type Keypoint = {
   score: number
 }
 
+type RunPoseFramePayload = {
+  rgba: Uint8ClampedArray | Uint8Array | number[]
+  width: number
+  height: number
+}
+
 type Letterbox = {
   scale: number
   padX: number
   padY: number
   sourceWidth: number
   sourceHeight: number
+  inputSize: number
 }
+
+const INPUT_SIZE = 640
+const KEYPOINT_COUNT = 17
+const KEYPOINT_VALUE_COUNT = KEYPOINT_COUNT * 3
+const DETECTION_THRESHOLD = 0.01
 
 let sessionPromise: Promise<ort.InferenceSession> | undefined
 
+function getModelPath() {
+  const devPath = join(process.cwd(), 'resources', 'models', 'yolo26n-pose.onnx')
+  const packagedPath = join(process.resourcesPath, 'models', 'yolo26n-pose.onnx')
+
+  if (existsSync(devPath)) return devPath
+  if (existsSync(packagedPath)) return packagedPath
+
+  return devPath
+}
+
 function getSession() {
-  sessionPromise ??= ort.InferenceSession.create(
-    join(process.cwd(), 'resources', 'models', 'yolo26n-pose.onnx'),
-    {
-      executionProviders: ['cpu']
-    }
-  )
+  sessionPromise ??= ort.InferenceSession.create(getModelPath(), {
+    executionProviders: ['cpu']
+  })
 
   return sessionPromise
 }
 
-function preprocessRgbaFrame(input: {
-  rgba: Uint8ClampedArray
-  width: number
-  height: number
-  inputSize: number
-}) {
-  const { rgba, width, height, inputSize } = input
-
-  const scale = Math.min(inputSize / width, inputSize / height)
-  const resizedWidth = Math.round(width * scale)
-  const resizedHeight = Math.round(height * scale)
-  const padX = Math.floor((inputSize - resizedWidth) / 2)
-  const padY = Math.floor((inputSize - resizedHeight) / 2)
-
-  const resized = new Uint8ClampedArray(inputSize * inputSize * 4)
-
-  for (let i = 0; i < inputSize * inputSize; i++) {
-    resized[i * 4] = 114
-    resized[i * 4 + 1] = 114
-    resized[i * 4 + 2] = 114
-    resized[i * 4 + 3] = 255
+function getRgba(payload: RunPoseFramePayload) {
+  if (payload.rgba instanceof Uint8ClampedArray) {
+    return payload.rgba
   }
 
-  for (let y = 0; y < resizedHeight; y++) {
-    const srcY = Math.min(height - 1, Math.floor(y / scale))
+  if (payload.rgba instanceof Uint8Array) {
+    return new Uint8ClampedArray(
+      payload.rgba.buffer,
+      payload.rgba.byteOffset,
+      payload.rgba.byteLength
+    )
+  }
 
-    for (let x = 0; x < resizedWidth; x++) {
-      const srcX = Math.min(width - 1, Math.floor(x / scale))
+  return new Uint8ClampedArray(payload.rgba)
+}
 
-      const srcIndex = (srcY * width + srcX) * 4
-      const dstIndex = ((y + padY) * inputSize + (x + padX)) * 4
+function preprocessFrame(payload: RunPoseFramePayload) {
+  const sourceWidth = payload.width
+  const sourceHeight = payload.height
+  const rgba = getRgba(payload)
 
-      resized[dstIndex] = rgba[srcIndex]
-      resized[dstIndex + 1] = rgba[srcIndex + 1]
-      resized[dstIndex + 2] = rgba[srcIndex + 2]
-      resized[dstIndex + 3] = 255
+  if (sourceWidth <= 0 || sourceHeight <= 0) {
+    throw new Error(`Invalid frame size: ${sourceWidth}x${sourceHeight}`)
+  }
+
+  const expectedLength = sourceWidth * sourceHeight * 4
+
+  if (rgba.length < expectedLength) {
+    throw new Error(`Invalid RGBA buffer length: expected ${expectedLength}, got ${rgba.length}`)
+  }
+
+  const scale = Math.min(INPUT_SIZE / sourceWidth, INPUT_SIZE / sourceHeight)
+  const resizedWidth = Math.round(sourceWidth * scale)
+  const resizedHeight = Math.round(sourceHeight * scale)
+
+  const padX = Math.floor((INPUT_SIZE - resizedWidth) / 2)
+  const padY = Math.floor((INPUT_SIZE - resizedHeight) / 2)
+
+  const pixels = INPUT_SIZE * INPUT_SIZE
+  const tensorData = new Float32Array(3 * pixels)
+
+  tensorData.fill(114 / 255)
+
+  for (let targetY = 0; targetY < resizedHeight; targetY++) {
+    const sourceY = Math.min(sourceHeight - 1, Math.round(targetY / scale))
+
+    for (let targetX = 0; targetX < resizedWidth; targetX++) {
+      const sourceX = Math.min(sourceWidth - 1, Math.round(targetX / scale))
+
+      const sourceIndex = (sourceY * sourceWidth + sourceX) * 4
+      const modelX = targetX + padX
+      const modelY = targetY + padY
+      const modelIndex = modelY * INPUT_SIZE + modelX
+
+      tensorData[modelIndex] = rgba[sourceIndex] / 255
+      tensorData[pixels + modelIndex] = rgba[sourceIndex + 1] / 255
+      tensorData[pixels * 2 + modelIndex] = rgba[sourceIndex + 2] / 255
     }
   }
 
-  const pixels = inputSize * inputSize
-  const tensorData = new Float32Array(3 * pixels)
-
-  for (let i = 0; i < pixels; i++) {
-    const rgbaIndex = i * 4
-
-    tensorData[i] = resized[rgbaIndex] / 255
-    tensorData[pixels + i] = resized[rgbaIndex + 1] / 255
-    tensorData[pixels * 2 + i] = resized[rgbaIndex + 2] / 255
-  }
-
   return {
-    tensor: new ort.Tensor('float32', tensorData, [1, 3, inputSize, inputSize]),
+    tensor: new ort.Tensor('float32', tensorData, [1, 3, INPUT_SIZE, INPUT_SIZE]),
     letterbox: {
       scale,
       padX,
       padY,
-      sourceWidth: width,
-      sourceHeight: height
+      sourceWidth,
+      sourceHeight,
+      inputSize: INPUT_SIZE
     } satisfies Letterbox
   }
 }
@@ -103,9 +134,11 @@ function parseBestPose(output: ort.Tensor, letterbox: Letterbox): Keypoint[] | n
   const itemSize = channelsFirst ? dims[1] : dims[2]
   const candidateCount = channelsFirst ? dims[2] : dims[1]
 
-  if (itemSize < 56) {
-    throw new Error(`Expected YOLO pose item size >= 56, got ${itemSize}`)
+  if (itemSize < 5 + KEYPOINT_VALUE_COUNT) {
+    throw new Error(`Expected YOLO pose item size >= ${5 + KEYPOINT_VALUE_COUNT}, got ${itemSize}`)
   }
+
+  const keypointStart = itemSize - KEYPOINT_VALUE_COUNT
 
   const get = (candidateIndex: number, valueIndex: number) => {
     if (channelsFirst) {
@@ -119,34 +152,52 @@ function parseBestPose(output: ort.Tensor, letterbox: Letterbox): Keypoint[] | n
   let bestKeypoints: Keypoint[] | null = null
 
   for (let i = 0; i < candidateCount; i++) {
-    const score = get(i, 4)
+    const detectionScore = get(i, 4)
 
-    if (score < 0.25) continue
-    if (score <= bestScore) continue
+    if (!Number.isFinite(detectionScore)) {
+      continue
+    }
+
+    if (detectionScore < DETECTION_THRESHOLD) {
+      continue
+    }
+
+    if (detectionScore <= bestScore) {
+      continue
+    }
 
     const keypoints: Keypoint[] = []
 
-    for (let k = 0; k < 17; k++) {
-      const base = 5 + k * 3
+    for (let k = 0; k < KEYPOINT_COUNT; k++) {
+      const base = keypointStart + k * 3
 
-      const modelX = get(i, base)
-      const modelY = get(i, base + 1)
-      const keypointScore = get(i, base + 2)
+      let modelX = get(i, base)
+      let modelY = get(i, base + 1)
+      let score = get(i, base + 2)
+
+      if (!Number.isFinite(modelX)) modelX = 0
+      if (!Number.isFinite(modelY)) modelY = 0
+      if (!Number.isFinite(score)) score = 0
+
+      if (Math.abs(modelX) <= 1.5 && Math.abs(modelY) <= 1.5) {
+        modelX *= letterbox.inputSize
+        modelY *= letterbox.inputSize
+      }
+
+      if (score < 0) score = 0
+      if (score > 1) score = 1
+
+      const x = (modelX - letterbox.padX) / letterbox.scale
+      const y = (modelY - letterbox.padY) / letterbox.scale
 
       keypoints.push({
-        x: Math.max(
-          0,
-          Math.min(letterbox.sourceWidth, (modelX - letterbox.padX) / letterbox.scale)
-        ),
-        y: Math.max(
-          0,
-          Math.min(letterbox.sourceHeight, (modelY - letterbox.padY) / letterbox.scale)
-        ),
-        score: keypointScore
+        x: Math.max(0, Math.min(letterbox.sourceWidth, x)),
+        y: Math.max(0, Math.min(letterbox.sourceHeight, y)),
+        score
       })
     }
 
-    bestScore = score
+    bestScore = detectionScore
     bestKeypoints = keypoints
   }
 
@@ -154,33 +205,29 @@ function parseBestPose(output: ort.Tensor, letterbox: Letterbox): Keypoint[] | n
 }
 
 export function registerPoseIpc() {
-  ipcMain.handle(
-    'pose:run-frame',
-    async (
-      _event,
-      payload: {
-        rgba: Uint8ClampedArray
-        width: number
-        height: number
-      }
-    ) => {
-      const session = await getSession()
+  ipcMain.removeHandler('pose:run-frame')
 
-      const { tensor, letterbox } = preprocessRgbaFrame({
-        rgba: payload.rgba,
-        width: payload.width,
-        height: payload.height,
-        inputSize: 640
-      })
+  ipcMain.handle('pose:run-frame', async (_event, payload: RunPoseFramePayload) => {
+    const session = await getSession()
+    const { tensor, letterbox } = preprocessFrame(payload)
 
-      const inputName = session.inputNames[0]
-      const outputName = session.outputNames[0]
+    const inputName = session.inputNames[0]
+    const outputName = session.outputNames[0]
 
-      const outputs = await session.run({
-        [inputName]: tensor
-      })
+    const outputs = await session.run({
+      [inputName]: tensor
+    })
 
-      return parseBestPose(outputs[outputName], letterbox)
+    const output = outputs[outputName]
+
+    if (!output) {
+      throw new Error(`ONNX output not found: ${outputName}`)
     }
-  )
+
+    return parseBestPose(output, letterbox)
+  })
+
+  app.once('before-quit', () => {
+    sessionPromise = undefined
+  })
 }

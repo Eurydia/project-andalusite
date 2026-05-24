@@ -25,7 +25,7 @@ import {
 import { AboutAppDialog } from '@renderer/components/about-app-dialog'
 import { ExerciseGroupDisplay } from '@renderer/components/exercise-group-display'
 import { FC, useEffect, useMemo, useState } from 'react'
-import { STATUS, type EventData, type Step } from 'react-joyride'
+import { Joyride, STATUS, type EventData, type Step } from 'react-joyride'
 
 export const View$MainWindow: FC = () => {
   const [settingDialogOpen, setSettingDialogOpen] = useState(false)
@@ -69,7 +69,7 @@ export const View$MainWindow: FC = () => {
 
   return (
     <>
-      {/* <Joyride
+      <Joyride
         run={tourRun}
         continuous
         steps={tourSteps}
@@ -85,7 +85,7 @@ export const View$MainWindow: FC = () => {
           arrowColor: '#111111',
           overlayColor: 'rgba(0, 0, 0, 0.48)'
         }}
-      /> */}
+      />
 
       <AppBar position="relative">
         <Toolbar sx={{ justifyContent: 'space-between' }}>

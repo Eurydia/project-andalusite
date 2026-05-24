@@ -24,7 +24,7 @@ A squat is a lower-body exercise that strengthens the legs, hips, and core. Duri
 4\. Start with bodyweight squats before adding weight  
 5\. Practice proper technique slowly  
 6\. Stop if you feel sharp pain`,
-    exerciseId: 'BASIC-01',
+    exerciseId: 'squat',
     thumbnailSrc: '/assets/images/squat.png',
     videoSrc: 'https://www.youtube.com/embed/d_xB-41ieqw'
   },
@@ -53,7 +53,7 @@ A squat is a lower-body exercise that strengthens the legs, hips, and core. Duri
   6. Breathe normally and avoid holding your breath
   7. Stop if you feel sharp pain in the back, shoulders, or wrists
   8. Practice regularly to improve endurance and stability`,
-    exerciseId: 'BASIC-02',
+    exerciseId: 'plank',
     thumbnailSrc: '/assets/images/plank.png',
     videoSrc: 'https://www.youtube.com/embed/v_8rMn6jxqc'
   },

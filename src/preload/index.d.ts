@@ -1,6 +1,18 @@
 import type { ElectronAPI } from '@electron-toolkit/preload'
 import type { BrowserWindowConstructorOptions } from 'electron'
 
+type PoseKeypoint = {
+  x: number
+  y: number
+  score: number
+}
+
+type RunPoseFramePayload = {
+  rgba: Uint8ClampedArray
+  width: number
+  height: number
+}
+
 type API = {
   createWindow: (
     payload?: BrowserWindowConstructorOptions & {
@@ -15,6 +27,7 @@ type API = {
   windowExists: (id: number) => Promise<{
     exists: boolean
   }>
+  runPoseFrame: (payload: RunPoseFramePayload) => Promise<PoseKeypoint[] | null>
 }
 
 declare global {

@@ -1,8 +1,5 @@
 export type ExerciseData = {
-  exerciseId: string
   name: string
-  explanation: string
   thumbnailSrc: string
-  videoSrc: string
   difficulty: 'BASIC' | 'INTERMEDIATE' | 'ADVANCED'
-}
+} & ({ soon?: false; exerciseId: string; explanation: string; videoSrc: string } | { soon: true })

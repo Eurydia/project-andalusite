@@ -88,8 +88,7 @@ export const View$MainWindow: FC = () => {
           <Button color="secondary" onClick={() => setAboutDialogOpen(true)} variant="text">
             {`About`}
           </Button>
-          <Typography>{`Information`}</Typography>
-          <Typography>{`Exercise poses`}</Typography>
+          <Typography>{`EXERCISES`}</Typography>
           <IconButton onClick={() => setSettingDialogOpen(true)}>
             <SettingsRounded />
           </IconButton>

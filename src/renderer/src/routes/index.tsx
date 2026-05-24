@@ -17,12 +17,10 @@ function RouteComponent() {
     return (
       <iframe
         src={search.url ?? 'about:blank'}
-        width="100vw"
-        height="100vh"
         referrerPolicy="strict-origin-when-cross-origin"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowFullScreen
-        style={{ border: 0 }}
+        style={{ border: 0, width: '100vw', height: '100vh', display: 'block' }}
       />
     )
   }

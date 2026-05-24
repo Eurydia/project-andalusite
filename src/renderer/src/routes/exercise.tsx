@@ -483,7 +483,7 @@ export const Route = createFileRoute('/exercise')({
   },
   component: RouteComponent,
   validateSearch: z.object({
-    videoSrc: z.url(),
+    videoSrc: z.string(),
     exerciseId: z.string()
   }),
   loader: async ({ abortController }) => {

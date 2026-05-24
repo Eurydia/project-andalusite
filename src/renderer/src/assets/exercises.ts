@@ -26,7 +26,7 @@ A squat is a lower-body exercise that strengthens the legs, hips, and core. Duri
 6\. Stop if you feel sharp pain`,
     exerciseId: 'squat',
     thumbnailSrc: './assets/images/squat.png',
-    videoSrc: 'https://www.youtube.com/embed/d_xB-41ieqw'
+    videoSrc: './assets/videos/squat.mp4'
   },
   {
     name: 'Plank',
@@ -55,7 +55,7 @@ A squat is a lower-body exercise that strengthens the legs, hips, and core. Duri
   8. Practice regularly to improve endurance and stability`,
     exerciseId: 'plank',
     thumbnailSrc: './assets/images/plank.png',
-    videoSrc: 'https://www.youtube.com/embed/v_8rMn6jxqc'
+    videoSrc: './assets/videos/plank.mp4'
   },
   {
     soon: true,

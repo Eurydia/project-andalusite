@@ -1,30 +1,11 @@
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
-import { app, BrowserWindow, session, shell } from 'electron'
+import { app, BrowserWindow, shell } from 'electron'
 import { join } from 'path'
 import icon from '../../resources/icon.png?asset'
 import { registerPoseIpc } from './modules/onnx'
 import { registerPersistIpc } from './modules/persist'
 import { registerCreatedWindowIpc } from './modules/sub-window-manager'
 
-function patchYoutube153() {
-  session.defaultSession.webRequest.onBeforeSendHeaders(
-    {
-      urls: [
-        'https://www.youtube.com/*',
-        'https://www.youtube-nocookie.com/*',
-        'https://s.ytimg.com/*',
-        'https://i.ytimg.com/*',
-        'https://*.googlevideo.com/*'
-      ]
-    },
-    (details, callback) => {
-      details.requestHeaders.Referer = 'http://localhost:5173/'
-      details.requestHeaders.Origin = 'http://localhost:5173'
-
-      callback({ requestHeaders: details.requestHeaders })
-    }
-  )
-}
 const createWindow = () => {
   const mainWindow = new BrowserWindow({
     width: 900,
@@ -71,7 +52,6 @@ app.whenReady().then(() => {
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
-  patchYoutube153()
   registerCreatedWindowIpc()
   registerPersistIpc()
   registerPoseIpc()

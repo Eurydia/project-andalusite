@@ -1,5 +1,5 @@
 appId: com.electron.app
-productName: yoga-ap
+productName: yoga-app
 directories:
   buildResources: build
 files:
@@ -11,8 +11,9 @@ files:
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
 asarUnpack:
   - resources/**
+  - node_modules/onnxruntime-node/bin/napi-v6/win32/x64/**
 win:
-  executableName: yoga-ap
+  executableName: yoga-app
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
@@ -43,3 +44,8 @@ publish:
   url: https://example.com/auto-updates
 electronDownload:
   mirror: https://npmmirror.com/mirrors/electron/
+extraResources:
+  - from: resources/models
+    to: models
+    filter:
+      - '**/*'

@@ -1,5 +1,4 @@
 import { app, ipcMain } from 'electron'
-import { existsSync } from 'fs'
 import * as ort from 'onnxruntime-node'
 import { join } from 'path'
 
@@ -32,13 +31,11 @@ const DETECTION_THRESHOLD = 0.01
 let sessionPromise: Promise<ort.InferenceSession> | undefined
 
 function getModelPath() {
-  const devPath = join(process.cwd(), 'resources', 'models', 'yolo26n-pose.onnx')
-  const packagedPath = join(process.resourcesPath, 'models', 'yolo26n-pose.onnx')
+  if (app.isPackaged) {
+    return join(process.resourcesPath, 'models', 'yolo26n-pose.onnx')
+  }
 
-  if (existsSync(devPath)) return devPath
-  if (existsSync(packagedPath)) return packagedPath
-
-  return devPath
+  return join(process.cwd(), 'resources', 'models', 'yolo26n-pose.onnx')
 }
 
 function getSession() {

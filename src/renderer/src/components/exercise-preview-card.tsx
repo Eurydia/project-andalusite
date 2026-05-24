@@ -17,7 +17,6 @@ import { ExerciseData } from '@renderer/types'
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { Joyride, STATUS, type EventData, type Step } from 'react-joyride'
 import Markdown from 'react-markdown'
-import ReactPlayer from 'react-player'
 import { StyledRouterLinkButton } from './styled-router-link-button'
 
 export const ExercisePreviewCard: FC<{
@@ -197,7 +196,16 @@ export const ExercisePreviewCard: FC<{
                   justifyContent: 'center'
                 }}
               >
-                <ReactPlayer controls loop height="100%" width="100%" src={data.videoSrc} />
+                <iframe
+                  src={data.videoSrc}
+                  title="YouTube video"
+                  width="100%"
+                  height="100%"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  style={{ border: 0 }}
+                />
               </Box>
             </Grid>
 

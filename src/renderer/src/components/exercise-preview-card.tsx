@@ -204,7 +204,7 @@ export const ExercisePreviewCard: FC<{
                   referrerPolicy="strict-origin-when-cross-origin"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
-                  style={{ border: 0 }}
+                  style={{ border: 0, objectFit: 'contain' }}
                 />
               </Box>
             </Grid>

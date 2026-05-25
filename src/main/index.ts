@@ -26,9 +26,6 @@ const createWindow = () => {
     }
   })
 
-  mainWindow.webContents.once('did-finish-load', () => {
-    mainWindow.webContents.openDevTools({ mode: 'detach' })
-  })
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()

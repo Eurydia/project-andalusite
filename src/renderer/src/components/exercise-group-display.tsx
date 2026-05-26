@@ -5,14 +5,15 @@ import { ExercisePreviewCard } from './exercise-preview-card'
 
 export const ExerciseGroupDisplay: FC<{
   items: Array<ExerciseData>
+  idPrefix: string
 }> = (props) => (
   <Grid container spacing={4}>
     {props.items.map((item, i) => {
-      const exerciseCardHtmlId = `exercise-card-${item?.difficulty.toLowerCase()}-${i}`
-
       return (
-        <Grid size={{ lg: 4, sm: 6 }} key={exerciseCardHtmlId}>
-          <ExercisePreviewCard htmlId={exerciseCardHtmlId} data={item} />
+        <Grid size={{ lg: 4, sm: 6 }} key={i}>
+          <div data-onboarding={`${props.idPrefix}-${i}`}>
+            <ExercisePreviewCard data={item} />
+          </div>
         </Grid>
       )
     })}

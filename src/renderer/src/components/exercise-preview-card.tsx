@@ -1,8 +1,8 @@
 import KeyboardArrowLeftRounded from '@mui/icons-material/KeyboardArrowLeftRounded'
 import SelfImprovementRounded from '@mui/icons-material/SelfImprovementRounded'
 import Whatshot from '@mui/icons-material/Whatshot'
-import { Button, Toolbar } from '@mui/material'
 import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardActionArea from '@mui/material/CardActionArea'
 import CardHeader from '@mui/material/CardHeader'
@@ -12,6 +12,7 @@ import Dialog from '@mui/material/Dialog'
 import DialogContent from '@mui/material/DialogContent'
 import Grid from '@mui/material/Grid'
 import Stack from '@mui/material/Stack'
+import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
 import { ExerciseData } from '@renderer/types'
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
@@ -20,7 +21,6 @@ import Markdown from 'react-markdown'
 import { StyledRouterLinkButton } from './styled-router-link-button'
 
 export const ExercisePreviewCard: FC<{
-  htmlId?: string
   data: ExerciseData
 }> = (props) => {
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -129,7 +129,7 @@ export const ExercisePreviewCard: FC<{
 
   return (
     <>
-      <Card id={props.htmlId} variant="outlined">
+      <Card variant="outlined">
         <CardActionArea onClick={openDialog} disableTouchRipple disabled={data.soon}>
           <CardMedia
             image={data.thumbnailSrc}
@@ -227,7 +227,6 @@ export const ExercisePreviewCard: FC<{
                     >
                       {`Back`}
                     </Button>
-
                     <Typography
                       data-tour="exercise-title"
                       variant="h2"

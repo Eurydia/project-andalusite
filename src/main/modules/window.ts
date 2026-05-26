@@ -2,7 +2,7 @@ import { is } from '@electron-toolkit/utils'
 import { BrowserWindow, ipcMain, type BrowserWindowConstructorOptions } from 'electron'
 import { join } from 'path'
 
-const createdWindows = new Map<
+const windowLookup = new Map<
   number,
   {
     window: BrowserWindow
@@ -45,14 +45,14 @@ export const registerCreatedWindowIpc = () => {
           createdWindow.close()
         }
 
-        createdWindows.delete(createdWindow.id)
+        windowLookup.delete(createdWindow.id)
       }
 
       if (ownerWindow && !ownerWindow.isDestroyed()) {
         ownerWindow.once('closed', closeWithOwner)
       }
 
-      createdWindows.set(createdWindow.id, {
+      windowLookup.set(createdWindow.id, {
         window: createdWindow,
         ownerWindow,
         closeWithOwner
@@ -65,13 +65,13 @@ export const registerCreatedWindowIpc = () => {
       })
 
       createdWindow.on('closed', () => {
-        const trackedWindow = createdWindows.get(createdWindow.id)
+        const trackedWindow = windowLookup.get(createdWindow.id)
 
         if (trackedWindow?.ownerWindow && trackedWindow.closeWithOwner) {
           trackedWindow.ownerWindow.removeListener('closed', trackedWindow.closeWithOwner)
         }
 
-        createdWindows.delete(createdWindow.id)
+        windowLookup.delete(createdWindow.id)
       })
 
       const search = new URLSearchParams({
@@ -97,10 +97,10 @@ export const registerCreatedWindowIpc = () => {
   )
 
   ipcMain.handle('created-window:delete', (_event, id: number) => {
-    const trackedWindow = createdWindows.get(id)
+    const trackedWindow = windowLookup.get(id)
 
     if (!trackedWindow || trackedWindow.window.isDestroyed()) {
-      createdWindows.delete(id)
+      windowLookup.delete(id)
 
       return {
         ok: false
@@ -108,7 +108,7 @@ export const registerCreatedWindowIpc = () => {
     }
 
     trackedWindow.window.close()
-    createdWindows.delete(id)
+    windowLookup.delete(id)
 
     return {
       ok: true
@@ -116,11 +116,11 @@ export const registerCreatedWindowIpc = () => {
   })
 
   ipcMain.handle('created-window:exists', (_event, id: number) => {
-    const trackedWindow = createdWindows.get(id)
+    const trackedWindow = windowLookup.get(id)
     const exists = Boolean(trackedWindow && !trackedWindow.window.isDestroyed())
 
     if (!exists) {
-      createdWindows.delete(id)
+      windowLookup.delete(id)
     }
 
     return {

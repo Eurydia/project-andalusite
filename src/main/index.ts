@@ -4,7 +4,7 @@ import { join } from 'path'
 import icon from '../../resources/icon.png?asset'
 import { registerPoseIpc } from './modules/onnx'
 import { registerPersistIpc } from './modules/persist'
-import { registerCreatedWindowIpc } from './modules/sub-window-manager'
+import { registerCreatedWindowIpc } from './modules/window'
 
 const createWindow = () => {
   const mainWindow = new BrowserWindow({
@@ -25,7 +25,6 @@ const createWindow = () => {
       devTools: true
     }
   })
-
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()

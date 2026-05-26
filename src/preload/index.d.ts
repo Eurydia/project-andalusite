@@ -13,27 +13,25 @@ type RunPoseFramePayload = {
   height: number
 }
 
-type API = {
-  createWindow: (
-    payload?: BrowserWindowConstructorOptions & {
-      url?: string
-    }
-  ) => Promise<{
-    id: number
-  }>
-  deleteWindow: (id: number) => Promise<{
-    ok: boolean
-  }>
-  windowExists: (id: number) => Promise<{
-    exists: boolean
-  }>
-  runPoseFrame: (payload: RunPoseFramePayload) => Promise<PoseKeypoint[] | null>
-}
-
 declare global {
   interface Window {
     electron: ElectronAPI
-    api: API
+    windowApi: {
+      createWindow: (
+        payload?: BrowserWindowConstructorOptions & {
+          url?: string
+        }
+      ) => Promise<{
+        id: number
+      }>
+      deleteWindow: (id: number) => Promise<{
+        ok: boolean
+      }>
+      windowExists: (id: number) => Promise<{
+        exists: boolean
+      }>
+      runPoseFrame: (payload: RunPoseFramePayload) => Promise<PoseKeypoint[] | null>
+    }
     persist: {
       get<T>(key: string, fallbackValue?: T): Promise<T>
       set<T>(key: string, value: T): Promise<T>

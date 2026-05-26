@@ -5,19 +5,13 @@ import {
   AppBar,
   Button,
   Container,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
   IconButton,
   InputAdornment,
   Stack,
   TextField,
   Toolbar,
   Tooltip,
-  Typography,
-  useTheme
+  Typography
 } from '@mui/material'
 import {
   ADVANCED_EXERCISES,
@@ -26,69 +20,30 @@ import {
 } from '@renderer/assets/exercises'
 import { AboutAppDialog } from '@renderer/components/about-app-dialog'
 import { ExerciseGroupDisplay } from '@renderer/components/exercise-group-display'
-import { FC, useEffect, useMemo, useState } from 'react'
-import { Joyride, STATUS, type EventData, type Step } from 'react-joyride'
+import { Onboarding$Home } from '@renderer/components/onboarding/home.onboarding'
+import { SettingsDialog } from '@renderer/components/settings-dialog'
+import { FC, useState } from 'react'
 
-export const View$MainWindow: FC = () => {
+export const View$MainWindow: FC<{
+  onboarding: {
+    shouldRun: boolean
+    onFinished: () => unknown
+  }
+}> = (props) => {
   const [settingDialogOpen, setSettingDialogOpen] = useState(false)
   const [aboutDialogOpen, setAboutDialogOpen] = useState(false)
-  const [tourRun, setTourRun] = useState(false)
-
-  const tourSteps = useMemo<Step[]>(
-    () => [
-      {
-        target: '[data-tour="exercise-search"]',
-        content: 'Search exercises by name, tag, difficulty, or duration.',
-        placement: 'bottom',
-        skipBeacon: true
-      },
-      {
-        target: '[data-tour="exercise-results"]',
-        content: 'Available exercises are shown here.',
-        placement: 'top',
-        skipBeacon: true
-      },
-      {
-        target: '#exercise-card-basic-0',
-        content: 'Click an exercise to open its preview.',
-        placement: 'top',
-        skipBeacon: true
-      }
-    ],
-    []
-  )
-
-  useEffect(() => {
-    setTourRun(true)
-  }, [])
-
-  function handleTourEvent(data: EventData) {
-    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
-      setTourRun(false)
-    }
-  }
-  const t = useTheme()
 
   return (
     <>
-      <Joyride
-        run={tourRun}
-        continuous
-        steps={tourSteps}
-        onEvent={handleTourEvent}
-        options={{
-          zIndex: t.zIndex.appBar + 1,
-          skipBeacon: true,
-          showProgress: true,
-          spotlightPadding: 12,
-          backgroundColor: '#111111',
-          textColor: '#ffffff',
-          primaryColor: '#ffffff',
-          arrowColor: '#111111',
-          overlayColor: 'rgba(0, 0, 0, 0.48)'
+      <Onboarding$Home
+        shouldRun={props.onboarding.shouldRun}
+        targets={{
+          searchBar: '[data-onboarding="searchbox"]',
+          exerciseDisplay: '[data-onboarding="exercise-display"]',
+          exerciseCard: '[data-onboarding="basic-0"]'
         }}
+        onFinished={props.onboarding.onFinished}
       />
-
       <AppBar position="relative">
         <Toolbar sx={{ justifyContent: 'space-between' }}>
           <Button color="secondary" onClick={() => setAboutDialogOpen(true)} variant="text">
@@ -103,7 +58,7 @@ export const View$MainWindow: FC = () => {
 
       <Container maxWidth="lg">
         <Stack spacing={4} sx={{ paddingY: 4 }}>
-          <Toolbar disableGutters data-tour="exercise-search">
+          <Toolbar disableGutters component={'div'} data-onboarding="searchbox">
             <TextField
               fullWidth
               placeholder="Search exercises"
@@ -130,33 +85,19 @@ export const View$MainWindow: FC = () => {
             />
           </Toolbar>
 
-          <Stack spacing={4} data-tour="exercise-results">
+          <Stack spacing={4} data-onboarding="exercise-display">
             <Typography sx={{ fontWeight: 900 }} variant="h2">{`Basic`}</Typography>
-            <ExerciseGroupDisplay items={BASIC_EXERCISES} />
+            <ExerciseGroupDisplay idPrefix="basic" items={BASIC_EXERCISES} />
 
             <Typography sx={{ fontWeight: 900 }} variant="h2">{`Intermediate`}</Typography>
-            <ExerciseGroupDisplay items={INTERMEDIATE_EXERCISES} />
+            <ExerciseGroupDisplay idPrefix="intermediate" items={INTERMEDIATE_EXERCISES} />
 
             <Typography sx={{ fontWeight: 900 }} variant="h2">{`Advanced`}</Typography>
-            <ExerciseGroupDisplay items={ADVANCED_EXERCISES} />
+            <ExerciseGroupDisplay idPrefix="advanced" items={ADVANCED_EXERCISES} />
           </Stack>
         </Stack>
       </Container>
-
-      <Dialog
-        fullWidth
-        maxWidth="md"
-        open={settingDialogOpen}
-        onClose={() => setSettingDialogOpen(false)}
-      >
-        <DialogTitle>{`Settings`}</DialogTitle>
-        <DialogContent>
-          <DialogContentText>{`Hang on tight. This feature will be coming soon 😉`}</DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setSettingDialogOpen(false)}>{`Close`}</Button>
-        </DialogActions>
-      </Dialog>
+      <SettingsDialog open={settingDialogOpen} onClose={() => setSettingDialogOpen(false)} />
       <AboutAppDialog open={aboutDialogOpen} onClose={() => setAboutDialogOpen(false)} />
     </>
   )

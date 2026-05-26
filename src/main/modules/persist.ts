@@ -6,15 +6,17 @@ type PersistStore = Record<string, unknown>
 
 let cache: PersistStore | null = null
 
-const storeDir = () => join(app.getPath('userData'), 'app-data')
-const storePath = () => join(storeDir(), 'persist.json')
-const tempPath = () => join(storeDir(), 'persist.tmp.json')
+const getStoreDir = () => join(app.getPath('userData'), 'app-data')
+const getStorePath = () => join(getStoreDir(), 'persist.json')
+const getTempPath = () => join(getStoreDir(), 'persist.tmp.json')
 
-async function loadStore(): Promise<PersistStore> {
-  if (cache) return cache
+async function loadStore() {
+  if (cache !== null) {
+    return cache
+  }
 
   try {
-    const raw = await readFile(storePath(), 'utf8')
+    const raw = await readFile(getStorePath(), 'utf8')
     cache = JSON.parse(raw) as PersistStore
   } catch {
     cache = {}
@@ -23,43 +25,44 @@ async function loadStore(): Promise<PersistStore> {
   return cache
 }
 
-async function saveStore(store: PersistStore): Promise<void> {
-  await mkdir(storeDir(), { recursive: true })
+async function commitStore(store: PersistStore) {
+  await mkdir(getStoreDir(), { recursive: true })
 
-  await writeFile(tempPath(), JSON.stringify(store, null, 2), 'utf8')
-  await rename(tempPath(), storePath())
+  await writeFile(getTempPath(), JSON.stringify(store, null, 2), 'utf8')
+  await rename(getTempPath(), getStorePath())
 }
 
-export function registerPersistIpc(): void {
+export function registerPersistIpc() {
   ipcMain.handle('persist:get', async (_event, key: string, fallbackValue: unknown = null) => {
-    if (typeof key !== 'string' || key.length === 0) {
-      throw new Error('Invalid persist key')
+    const _key = key.trim().normalize()
+    if (_key.length === 0) {
+      return
     }
-
     const store = await loadStore()
-    return key in store ? store[key] : fallbackValue
+    return _key in store ? store[_key] : fallbackValue
   })
 
   ipcMain.handle('persist:set', async (_event, key: string, value: unknown) => {
-    if (typeof key !== 'string' || key.length === 0) {
+    const _key = key.trim().normalize()
+    if (_key.length === 0) {
       throw new Error('Invalid persist key')
     }
 
     const store = await loadStore()
-    store[key] = value
-    await saveStore(store)
-
+    store[_key] = value
+    await commitStore(store)
     return value
   })
 
   ipcMain.handle('persist:delete', async (_event, key: string) => {
-    if (typeof key !== 'string' || key.length === 0) {
+    const _key = key.trim().normalize()
+    if (typeof _key !== 'string' || _key.length === 0) {
       throw new Error('Invalid persist key')
     }
 
     const store = await loadStore()
-    delete store[key]
-    await saveStore(store)
+    delete store[_key]
+    await commitStore(store)
 
     return true
   })

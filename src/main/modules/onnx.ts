@@ -34,7 +34,6 @@ function getModelPath() {
   if (app.isPackaged) {
     return join(process.resourcesPath, 'models', 'yolo26n-pose.onnx')
   }
-
   return join(process.cwd(), 'resources', 'models', 'yolo26n-pose.onnx')
 }
 

@@ -10,13 +10,7 @@ export const Route = createRootRoute({
       <CssBaseline />
       <Outlet />
       <TanStackRouterDevtools />
-      <ToastContainer
-        autoClose={750}
-        stacked
-        pauseOnFocusLoss={false}
-        limit={3}
-        position="bottom-left"
-      />
+      <ToastContainer autoClose={750} stacked pauseOnFocusLoss={false} limit={3} />
     </ThemeProvider>
   )
 })

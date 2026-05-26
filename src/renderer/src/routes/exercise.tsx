@@ -101,7 +101,7 @@ async function getWebcamStream(signal: AbortSignal) {
 }
 
 const openCreatedWindow = (url: string) =>
-  window.api.createWindow({
+  window.windowApi.createWindow({
     width: 800,
     height: 600,
     title: 'Media Player',
@@ -115,7 +115,7 @@ const closeCreatedWindow = (id?: number) => {
     return
   }
 
-  void window.api.deleteWindow(id)
+  void window.windowApi.deleteWindow(id)
 }
 
 const formatTimer = (seconds: number) => {
@@ -728,7 +728,7 @@ function RouteComponent() {
 
       const imageData = frameCtx.getImageData(0, 0, frameCanvas.width, frameCanvas.height)
 
-      const result = await window.api.runPoseFrame({
+      const result = await window.windowApi.runPoseFrame({
         rgba: imageData.data,
         width: imageData.width,
         height: imageData.height
@@ -839,7 +839,7 @@ function RouteComponent() {
         return
       }
 
-      const result = await window.api.windowExists(id)
+      const result = await window.windowApi.windowExists(id)
 
       if (active) {
         setCreatedWindowOpen(result.exists)
@@ -969,23 +969,19 @@ function RouteComponent() {
           {timerPaused ? `Resume` : `Pause`}
         </Button>
 
-        <Box component="span" data-tour="exercise-video-player">
-          {createdWindowOpen ? (
-            <Typography sx={{ px: 1 }}>{`Player open`}</Typography>
-          ) : (
-            <Button
-              onClick={async () => {
-                const createdWindow = await openCreatedWindow(search.videoSrc)
-
-                closedWindowRef.current = false
-                createdWindowIdRef.current = createdWindow.id
-                setCreatedWindowId(createdWindow.id)
-                setCreatedWindowOpen(true)
-              }}
-            >
-              {`Reopen player`}
-            </Button>
-          )}
+        <Box data-tour="exercise-video-player">
+          <Button
+            disabled={createdWindowOpen}
+            onClick={async () => {
+              const createdWindow = await openCreatedWindow(search.videoSrc)
+              closedWindowRef.current = false
+              createdWindowIdRef.current = createdWindow.id
+              setCreatedWindowId(createdWindow.id)
+              setCreatedWindowOpen(true)
+            }}
+          >
+            {`Reopen player`}
+          </Button>
         </Box>
       </Toolbar>
     </Box>

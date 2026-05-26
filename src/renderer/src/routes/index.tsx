@@ -1,6 +1,7 @@
 import { View$MainWindow } from '@renderer/views/main-window.view'
 import { View$VideoWindow } from '@renderer/views/video-window.view'
 import { createFileRoute } from '@tanstack/react-router'
+import { useState } from 'react'
 import z from 'zod'
 
 export const Route = createFileRoute('/')({
@@ -26,6 +27,8 @@ export const Route = createFileRoute('/')({
 
 function RouteComponent() {
   const data = Route.useLoaderData()
+  const [onboardHomeHasRun, setOnboardHomeHasRun] = useState(data.onboardingHasRun ?? false)
+  const [onboardCardHasRun, setOnboardCardHasRun] = useState(data.onboardingCardHasRun ?? false)
   if (data.kind === 'VIDEO_PLAYER') {
     return <View$VideoWindow url={data.url} />
   }
@@ -33,12 +36,18 @@ function RouteComponent() {
     <View$MainWindow
       onboarding={{
         home: {
-          shouldRun: !data.onboardingHasRun,
-          onFinished: () => window.persist.set('onboard-home-has-run', true)
+          shouldRun: !onboardHomeHasRun,
+          onFinished: async () => {
+            await window.persist.set('onboard-home-has-run', true)
+            setOnboardHomeHasRun(true)
+          }
         },
         card: {
-          shouldRun: !data.onboardingCardHasRun,
-          onFinished: () => window.persist.set('onboard-card-has-run', true)
+          shouldRun: !onboardCardHasRun,
+          onFinished: async () => {
+            await window.persist.set('onboard-card-has-run', true)
+            setOnboardCardHasRun(true)
+          }
         }
       }}
     />

@@ -19,8 +19,8 @@ export const Route = createFileRoute('/')({
     }
 
     const onboardingHasRun = await window.persist.get('onboard-home-has-run', false)
-    console.debug(onboardingHasRun)
-    return { kind: 'MAIN', onboardingHasRun } as const
+    const onboardingCardHasRun = await window.persist.get('onboard-card-has-run', false)
+    return { kind: 'MAIN', onboardingHasRun, onboardingCardHasRun } as const
   }
 })
 
@@ -32,8 +32,14 @@ function RouteComponent() {
   return (
     <View$MainWindow
       onboarding={{
-        shouldRun: !data.onboardingHasRun,
-        onFinished: () => window.persist.set('onboard-home-has-run', true)
+        home: {
+          shouldRun: !data.onboardingHasRun,
+          onFinished: () => window.persist.set('onboard-home-has-run', true)
+        },
+        card: {
+          shouldRun: !data.onboardingCardHasRun,
+          onFinished: () => window.persist.set('onboard-card-has-run', true)
+        }
       }}
     />
   )

@@ -26,8 +26,14 @@ import { FC, useState } from 'react'
 
 export const View$MainWindow: FC<{
   onboarding: {
-    shouldRun: boolean
-    onFinished: () => unknown
+    home: {
+      shouldRun: boolean
+      onFinished: () => unknown
+    }
+    card: {
+      shouldRun: boolean
+      onFinished: () => unknown
+    }
   }
 }> = (props) => {
   const [settingDialogOpen, setSettingDialogOpen] = useState(false)
@@ -36,13 +42,13 @@ export const View$MainWindow: FC<{
   return (
     <>
       <Onboarding$Home
-        shouldRun={props.onboarding.shouldRun}
+        shouldRun={props.onboarding.home.shouldRun}
         targets={{
           searchBar: '[data-onboarding="searchbox"]',
           exerciseDisplay: '[data-onboarding="exercise-display"]',
           exerciseCard: '[data-onboarding="basic-0"]'
         }}
-        onFinished={props.onboarding.onFinished}
+        onFinished={props.onboarding.home.onFinished}
       />
       <AppBar position="relative">
         <Toolbar sx={{ justifyContent: 'space-between' }}>
@@ -87,13 +93,25 @@ export const View$MainWindow: FC<{
 
           <Stack spacing={4} data-onboarding="exercise-display">
             <Typography sx={{ fontWeight: 900 }} variant="h2">{`Basic`}</Typography>
-            <ExerciseGroupDisplay idPrefix="basic" items={BASIC_EXERCISES} />
+            <ExerciseGroupDisplay
+              idPrefix="basic"
+              items={BASIC_EXERCISES}
+              onboarding={props.onboarding.card}
+            />
 
             <Typography sx={{ fontWeight: 900 }} variant="h2">{`Intermediate`}</Typography>
-            <ExerciseGroupDisplay idPrefix="intermediate" items={INTERMEDIATE_EXERCISES} />
+            <ExerciseGroupDisplay
+              idPrefix="intermediate"
+              items={INTERMEDIATE_EXERCISES}
+              onboarding={props.onboarding.card}
+            />
 
             <Typography sx={{ fontWeight: 900 }} variant="h2">{`Advanced`}</Typography>
-            <ExerciseGroupDisplay idPrefix="advanced" items={ADVANCED_EXERCISES} />
+            <ExerciseGroupDisplay
+              idPrefix="advanced"
+              items={ADVANCED_EXERCISES}
+              onboarding={props.onboarding.card}
+            />
           </Stack>
         </Stack>
       </Container>

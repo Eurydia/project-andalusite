@@ -1,6 +1,6 @@
 {
-  "name": "yoga-app",
-  "version": "0.0.2",
+  "name": "yoga-correct",
+  "version": "0.0.3",
   "main": "./out/main/index.js",
   "scripts": {
     "format": "prettier --write .",

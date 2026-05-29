@@ -89,9 +89,9 @@ Downward Facing Dog is a popular yoga pose that stretches and strengthens the wh
 7. Warm up wrists and shoulders before practice
 8. Stop if you feel sharp pain in the wrists, shoulders, or lower back
 `,
-    exerciseId: 'INT-01',
+    exerciseId: 'downward-dog',
     thumbnailSrc: './assets/images/downward-dog.png',
-    videoSrc: 'https://www.youtube.com/embed/p146rICRJkg'
+    videoSrc: './assets/videos/downward-dog.mp4'
   },
   {
     soon: true,

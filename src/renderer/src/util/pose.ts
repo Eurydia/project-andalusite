@@ -25,6 +25,24 @@ type PlankMetrics = {
   plankStatus: 'Good Plank' | 'Hips Too Low' | 'Hips Too High'
 }
 
+type DownwardDogMetrics = {
+  leftHipAngle: number
+  rightHipAngle: number
+  hipAngle: number
+  leftArmAngle: number
+  rightArmAngle: number
+  armAngle: number
+  leftLegAngle: number
+  rightLegAngle: number
+  legAngle: number
+  downwardDogStatus:
+    | 'Good Downward Dog'
+    | 'Hips Too Low'
+    | 'Too Folded'
+    | 'Bend Arms'
+    | 'Bend Knees'
+}
+
 export type PoseFeedback =
   | {
       kind: 'good'
@@ -138,6 +156,75 @@ function getAverageScore(keypoints: Keypoint[]) {
   }
 
   return keypoints.reduce((total, point) => total + point.score, 0) / keypoints.length
+}
+
+export function getDownwardDogMetrics(keypoints: Keypoint[]): DownwardDogMetrics | null {
+  const leftShoulder = keypoints[5]
+  const rightShoulder = keypoints[6]
+  const leftElbow = keypoints[7]
+  const rightElbow = keypoints[8]
+  const leftWrist = keypoints[9]
+  const rightWrist = keypoints[10]
+  const leftHip = keypoints[11]
+  const rightHip = keypoints[12]
+  const leftKnee = keypoints[13]
+  const rightKnee = keypoints[14]
+  const leftAnkle = keypoints[15]
+  const rightAnkle = keypoints[16]
+
+  if (
+    !leftShoulder ||
+    !rightShoulder ||
+    !leftElbow ||
+    !rightElbow ||
+    !leftWrist ||
+    !rightWrist ||
+    !leftHip ||
+    !rightHip ||
+    !leftKnee ||
+    !rightKnee ||
+    !leftAnkle ||
+    !rightAnkle
+  ) {
+    return null
+  }
+
+  const leftHipAngle = calculateAngle(leftShoulder, leftHip, leftAnkle)
+  const rightHipAngle = calculateAngle(rightShoulder, rightHip, rightAnkle)
+  const hipAngle = (leftHipAngle + rightHipAngle) / 2
+
+  const leftArmAngle = calculateAngle(leftShoulder, leftElbow, leftWrist)
+  const rightArmAngle = calculateAngle(rightShoulder, rightElbow, rightWrist)
+  const armAngle = (leftArmAngle + rightArmAngle) / 2
+
+  const leftLegAngle = calculateAngle(leftHip, leftKnee, leftAnkle)
+  const rightLegAngle = calculateAngle(rightHip, rightKnee, rightAnkle)
+  const legAngle = (leftLegAngle + rightLegAngle) / 2
+
+  let downwardDogStatus: DownwardDogMetrics['downwardDogStatus'] = 'Good Downward Dog'
+
+  if (hipAngle > 130) {
+    downwardDogStatus = 'Hips Too Low'
+  } else if (hipAngle < 80) {
+    downwardDogStatus = 'Too Folded'
+  } else if (armAngle < 160) {
+    downwardDogStatus = 'Bend Arms'
+  } else if (legAngle < 160) {
+    downwardDogStatus = 'Bend Knees'
+  }
+
+  return {
+    leftHipAngle,
+    rightHipAngle,
+    hipAngle,
+    leftArmAngle,
+    rightArmAngle,
+    armAngle,
+    leftLegAngle,
+    rightLegAngle,
+    legAngle,
+    downwardDogStatus
+  }
 }
 
 export function getSquatMetrics(keypoints: Keypoint[]): SquatMetrics | null {
@@ -338,6 +425,72 @@ export function getPlankFeedback(
       kind: 'bad',
       code: 'plank-hips-high',
       message: 'Lower your hips.'
+    }
+  }
+
+  return {
+    kind: 'good',
+    code: 'good'
+  }
+}
+
+export function getDownwardDogFeedback(
+  keypoints: Keypoint[],
+  metrics: DownwardDogMetrics | null
+): PoseFeedback {
+  if (keypoints.length === 0) {
+    return {
+      kind: 'bad',
+      code: 'no-pose',
+      message: 'Move into frame.'
+    }
+  }
+
+  if (getAverageScore(keypoints) < 0.2) {
+    return {
+      kind: 'bad',
+      code: 'low-confidence',
+      message: 'Move closer to the camera.'
+    }
+  }
+
+  if (!metrics) {
+    return {
+      kind: 'bad',
+      code: 'downward-dog-missing-body',
+      message: 'Keep your shoulders, elbows, wrists, hips, knees, and ankles visible.'
+    }
+  }
+
+  if (metrics.downwardDogStatus === 'Hips Too Low') {
+    return {
+      kind: 'bad',
+      code: 'downward-dog-hips-low',
+      message: 'Lift your hips.'
+    }
+  }
+
+  if (metrics.downwardDogStatus === 'Too Folded') {
+    return {
+      kind: 'bad',
+      code: 'downward-dog-too-folded',
+      message: 'Open your hips.'
+    }
+  }
+
+  if (metrics.downwardDogStatus === 'Bend Arms') {
+    return {
+      kind: 'bad',
+      code: 'downward-dog-arms-bent',
+      message: 'Straighten your arms.'
+    }
+  }
+
+  if (metrics.downwardDogStatus === 'Bend Knees') {
+    return {
+      kind: 'bad',
+      code: 'downward-dog-knees-bent',
+      message: 'Straighten your legs.'
     }
   }
 

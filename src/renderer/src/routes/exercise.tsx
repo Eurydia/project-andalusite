@@ -7,6 +7,8 @@ import {
   clearPoseOverlay,
   closeCreatedWindow,
   drawPoseOverlay,
+  getDownwardDogFeedback,
+  getDownwardDogMetrics,
   getPlankFeedback,
   getPlankMetrics,
   getSquatFeedback,
@@ -72,11 +74,9 @@ function RouteComponent() {
     if (value.includes('squat')) {
       return 'squat'
     }
-
-    if (value.includes('plank')) {
-      return 'plank'
+    if (value.includes('downward-dog')) {
+      return 'downward-dog'
     }
-
     return 'plank'
   }, [search.exerciseId])
 
@@ -88,6 +88,14 @@ function RouteComponent() {
     return getSquatMetrics(keypoints)
   }, [exerciseKind, keypoints])
 
+  const downwardDogMetrics = useMemo(() => {
+    if (exerciseKind !== 'downward-dog') {
+      return null
+    }
+
+    return getDownwardDogMetrics(keypoints)
+  }, [exerciseKind, keypoints])
+
   const plankMetrics = useMemo(() => {
     if (exerciseKind !== 'plank') {
       return null
@@ -97,12 +105,15 @@ function RouteComponent() {
   }, [exerciseKind, keypoints])
 
   const feedback = useMemo<PoseFeedback>(() => {
-    if (exerciseKind === 'squat') {
-      return getSquatFeedback(keypoints, squatMetrics)
+    switch (exerciseKind) {
+      case 'downward-dog':
+        return getDownwardDogFeedback(keypoints, downwardDogMetrics)
+      case 'squat':
+        return getSquatFeedback(keypoints, squatMetrics)
+      default:
+        return getPlankFeedback(keypoints, plankMetrics)
     }
-
-    return getPlankFeedback(keypoints, plankMetrics)
-  }, [exerciseKind, keypoints, plankMetrics, squatMetrics])
+  }, [exerciseKind, keypoints, plankMetrics, squatMetrics, downwardDogMetrics])
 
   useEffect(() => {
     if (feedback.kind === 'good') {

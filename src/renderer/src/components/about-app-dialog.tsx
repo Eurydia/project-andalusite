@@ -15,12 +15,12 @@ export const AboutAppDialog: FC<{ open: boolean; onClose: () => unknown }> = (pr
   return (
     <>
       <Dialog open={props.open} onClose={props.onClose} maxWidth="sm" fullWidth>
-        <DialogTitle>About FlowYoga</DialogTitle>
+        <DialogTitle>About YogaCorrect</DialogTitle>
 
         <DialogContent>
           <Stack spacing={2}>
             <DialogContentText>
-              FlowYoga is a desktop yoga training app that helps users follow structured practice
+              YogaCorrect is a desktop yoga training app that helps users follow structured practice
               sessions, view exercise previews, track session time, and receive webcam-based pose
               feedback during workouts.
             </DialogContentText>
@@ -51,14 +51,14 @@ export const AboutAppDialog: FC<{ open: boolean; onClose: () => unknown }> = (pr
             <Stack spacing={0.5}>
               <Typography variant="subtitle2">Developer</Typography>
               <Typography variant="body2" color="text.secondary">
-                FlowMotion Labs
+                YogaCorrect Team
               </Typography>
             </Stack>
 
             <Stack spacing={0.5}>
               <Typography variant="subtitle2">Website</Typography>
-              <Link href="https://flowyoga.app" target="_blank" rel="noreferrer" underline="hover">
-                https://flowyoga.app
+              <Link href="about:blank" target="_blank" rel="noreferrer" underline="hover">
+                https://yogacorret.ai
               </Link>
             </Stack>
           </Stack>

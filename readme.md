@@ -1,12 +1,12 @@
 ![](assets/images/thumbnail.png)
 
-> Powered by [ElectronJS](https://www.electronjs.org/), [ONNX](https://onnx.ai/) and [Ultralytic YOLO11](https://platform.ultralytics.com/).
+> Powered by [ElectronJS](https://www.electronjs.org/), [ONNX](https://onnx.ai/) and [Ultralytics YOLO11](https://platform.ultralytics.com/).
 
 # ~Andalusite
 
 _Andalusite_ is a functional prototype for a desktop application that teaches you how to properly perform a Yoga exercise.
 
-Under the hood, it uses a combination of ONNX runtime and a YOLO11 model. Together, they track your posture during exercise through your webcam and provide realtime feedback so you can immediately adjust your posture.
+Under the hood, it uses a combination of ONNX runtime and a Ultralytics YOLO11 model. Together, they track your posture during exercise through your webcam and provide realtime feedback so you can immediately adjust your posture.
 
 > With this setup, _Andalusite_ functions even when you are completely disconnected from the internet. **No server, no third-party to steal and sell your data. Your likeness and facial features stays on your device.**
 

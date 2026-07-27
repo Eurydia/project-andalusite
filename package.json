@@ -1,5 +1,5 @@
 {
-  "name": "project-andalusite",
+  "name": "yoga-correct",
   "version": "0.0.5",
   "main": "./out/main/index.js",
   "scripts": {
@@ -7,8 +7,11 @@
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
     "typecheck": "pnpm typecheck:node && pnpm run typecheck:web",
+    "prestart": "install-electron --no",
     "start": "electron-vite preview",
+    "predev": "install-electron --no",
     "dev": "electron-vite dev --watch",
+    "prebuild": "install-electron --no",
     "build": "pnpm run typecheck && electron-vite build",
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "pnpm  build && electron-builder --dir",
@@ -38,6 +41,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.5",
+    "@electron-toolkit/tsconfig": "^2.0.0",
     "@tanstack/router-plugin": "^1.168.11",
     "@types/node": "^22.19.19",
     "@types/react": "^19.2.15",

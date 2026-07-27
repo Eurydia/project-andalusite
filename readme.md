@@ -4,7 +4,7 @@
 
 # ~Andalusite
 
-_Andalusite_ is a functional prototype for a desktop application that teaches you how to properly perform a Yoga exercise.
+_Andalusite_ is a functional prototype for a desktop application that teaches you how to properly perform yoga exercises by providing instant feedback during the session.
 
 Under the hood, it uses a combination of ONNX runtime and a Ultralytics YOLO11 model. Together, they track your posture during exercise through your webcam and provide realtime feedback so you can immediately adjust your posture.
 

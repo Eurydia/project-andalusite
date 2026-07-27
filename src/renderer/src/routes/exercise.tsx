@@ -1,5 +1,14 @@
+import AccessTimeRounded from "@mui/icons-material/AccessTimeRounded";
 import KeyboardArrowLeftRounded from "@mui/icons-material/KeyboardArrowLeftRounded";
-import { Box, Button, Toolbar, Typography } from "@mui/material";
+import PauseRounded from "@mui/icons-material/PauseRounded";
+import PlayArrowRounded from "@mui/icons-material/PlayArrowRounded";
+import VideoLibraryRounded from "@mui/icons-material/VideoLibraryRounded";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Divider from "@mui/material/Divider";
+import Stack from "@mui/material/Stack";
+import Toolbar from "@mui/material/Toolbar";
+import Typography from "@mui/material/Typography";
 import { Onboarding$Exercise } from "@renderer/components/onboarding/exercise.onboarding";
 import { StyledRouterLinkButton } from "@renderer/components/styled-router-link-button";
 import { useSynthSoundEffects } from "@renderer/hooks/use-play-feedback-sfx";
@@ -21,39 +30,36 @@ import {
   syncOverlayCanvas,
 } from "@renderer/util/pose";
 import { formatTimer } from "@renderer/util/timer";
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { type Id, toast } from "react-toastify";
 import z from "zod";
 
+
 export const Route = createFileRoute("/exercise")({
-  onError: () => {
-    throw redirect({ to: "/" });
-  },
   component: RouteComponent,
   validateSearch: z.object({
     videoSrc: z.string(),
     exerciseId: z.string(),
   }),
-  loader: async ({ abortController }) => {
-    const stream = await getWebcamStream(abortController.signal);
-    const onboardingHasRun = await window.persist.get(
-      "onboard-exercise-has-run",
-      false,
-    );
+  loader: async () => {
+    let onboardingHasRun = false;
 
-    return {
-      stream,
-      onboardingHasRun,
-    };
-  },
-  onLeave: (match) => {
-    stopStream(match.loaderData?.stream);
+    try {
+      onboardingHasRun = await window.persist.get(
+        "onboard-exercise-has-run",
+        false,
+      );
+    } catch {
+      onboardingHasRun = false;
+    }
+
+    return { onboardingHasRun };
   },
 });
 
 function RouteComponent() {
-  const { stream, onboardingHasRun } = Route.useLoaderData();
+  const { onboardingHasRun } = Route.useLoaderData();
   const search = Route.useSearch();
   const { playGood, playBad } = useSynthSoundEffects();
 
@@ -72,6 +78,8 @@ function RouteComponent() {
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [timerPaused, setTimerPaused] = useState(false);
   const [keypoints, setKeypoints] = useState<Keypoint[]>([]);
+  const [stream, setStream] = useState<MediaStream | undefined>(undefined);
+  const [cameraUnavailable, setCameraUnavailable] = useState(false);
 
   const exerciseKind = useMemo(() => {
     const value = search.exerciseId.toLowerCase();
@@ -121,6 +129,10 @@ function RouteComponent() {
   }, [exerciseKind, keypoints, plankMetrics, squatMetrics, downwardDogMetrics]);
 
   useEffect(() => {
+    if (!stream) {
+      return;
+    }
+
     if (feedback.kind === "good") {
       if (
         feedbackCodeRef.current !== null &&
@@ -177,7 +189,7 @@ function RouteComponent() {
       feedbackCodeRef.current = feedback.code;
       void playBad();
     }
-  }, [feedback, playBad, playGood]);
+  }, [feedback, playBad, playGood, stream]);
 
   useEffect(() => {
     createdWindowIdRef.current = createdWindowId;
@@ -198,10 +210,44 @@ function RouteComponent() {
   }, [timerPaused]);
 
   useEffect(() => {
+    const abortController = new AbortController();
+    let active = true;
+    let activeStream: MediaStream | undefined;
+
+    void getWebcamStream(abortController.signal)
+      .then((nextStream) => {
+        activeStream = nextStream;
+
+        if (!active) {
+          stopStream(nextStream);
+          return;
+        }
+
+        setStream(nextStream);
+      })
+      .catch((error) => {
+        if (
+          !active ||
+          (error instanceof DOMException && error.name === "AbortError")
+        ) {
+          return;
+        }
+
+        setCameraUnavailable(true);
+      });
+
+    return () => {
+      active = false;
+      abortController.abort();
+      stopStream(activeStream);
+    };
+  }, []);
+
+  useEffect(() => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
 
-    if (!video || !canvas) {
+    if (!stream || !video || !canvas) {
       return;
     }
 
@@ -263,6 +309,7 @@ function RouteComponent() {
 
       const nextKeypoints = Array.isArray(result) ? result : [];
 
+
       setKeypoints(nextKeypoints);
 
       if (nextKeypoints.length > 0) {
@@ -282,6 +329,9 @@ function RouteComponent() {
 
         try {
           await runFrame();
+        } catch {
+          clearPoseOverlay(canvas);
+          setKeypoints([]);
         } finally {
           runningInference = false;
         }
@@ -418,7 +468,7 @@ function RouteComponent() {
   return (
     <>
       <Onboarding$Exercise
-        shouldRun={shouldRunOnboarding}
+        shouldRun={shouldRunOnboarding && Boolean(stream)}
         targets={{
           camera: '[data-tour="camera"]',
           timer: '[data-tour="timer"]',
@@ -435,17 +485,59 @@ function RouteComponent() {
           height: "100vh",
           overflow: "hidden",
           position: "relative",
-          background: (t) => t.palette.primary.dark,
+          backgroundColor: (t) => t.palette.primary.dark,
         }}
       >
         <Box
           data-tour="camera"
           sx={{
             position: "absolute",
-            inset: 0,
+            inset: { xs: 8, sm: 14 },
             overflow: "hidden",
+            borderRadius: { xs: 2.5, sm: 4 },
+            borderWidth: 1,
+            borderStyle: "solid",
+            borderColor: (t) =>
+              t.alpha(t.palette.primary.contrastText, 0.14),
+            backgroundColor: (t) => t.palette.primary.dark,
+            boxShadow: (t) => t.shadows[8],
           }}
         >
+          {!stream && (
+            <Box
+              sx={{
+                position: "absolute",
+                inset: 0,
+                zIndex: 1,
+                display: "grid",
+                placeItems: "center",
+                padding: 3,
+                textAlign: "center",
+              }}
+            >
+              <Stack spacing={0.75} sx={{ alignItems: "center" }}>
+                <Typography
+                  variant="h6"
+                  sx={{ color: (t) => t.palette.primary.contrastText }}
+                >
+                  {cameraUnavailable ? "Camera unavailable" : "Starting camera"}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    maxWidth: 420,
+                    color: (t) => t.palette.primary.contrastText,
+                    opacity: 0.72,
+                  }}
+                >
+                  {cameraUnavailable
+                    ? "Allow camera access in system settings, then reopen this exercise."
+                    : "Preparing live pose feedback..."}
+                </Typography>
+              </Stack>
+            </Box>
+          )}
+
           <video
             ref={videoRef}
             autoPlay
@@ -469,7 +561,54 @@ function RouteComponent() {
               pointerEvents: "none",
             }}
           />
+
+          <Box
+            sx={{
+              position: "absolute",
+              inset: 0,
+              pointerEvents: "none",
+              backgroundImage: (t) =>
+                `linear-gradient(180deg, ${t.alpha(t.palette.primary.dark, 0.36)} 0%, ${t.alpha(t.palette.primary.dark, 0)} 28%, ${t.alpha(t.palette.primary.dark, 0)} 68%, ${t.alpha(t.palette.primary.dark, 0.5)} 100%)`,
+            }}
+          />
         </Box>
+
+        <Stack
+          spacing={0.25}
+          sx={{
+            position: "fixed",
+            top: { xs: 22, sm: 30 },
+            left: { xs: 22, sm: 30 },
+            zIndex: 10,
+            paddingInline: 2,
+            paddingBlock: 1.25,
+            borderWidth: 1,
+            borderStyle: "solid",
+            borderColor: (t) =>
+              t.alpha(t.palette.primary.contrastText, 0.16),
+            borderRadius: 2.5,
+            color: (t) => t.palette.primary.contrastText,
+            backgroundColor: (t) => t.alpha(t.palette.primary.dark, 0.72),
+            backdropFilter: "blur(14px)",
+          }}
+        >
+          <Typography
+            variant="overline"
+            sx={{
+              fontSize: "0.64rem",
+              color: (t) => t.palette.primary.contrastText,
+              opacity: 0.62,
+            }}
+          >
+            LIVE ALIGNMENT
+          </Typography>
+          <Typography
+            variant="subtitle2"
+            sx={{ textTransform: "capitalize", letterSpacing: "0.02em" }}
+          >
+            {search.exerciseId.replaceAll("-", " ")}
+          </Typography>
+        </Stack>
 
         <Toolbar
           disableGutters
@@ -477,15 +616,26 @@ function RouteComponent() {
           sx={{
             position: "fixed",
             left: "50%",
-            bottom: 16,
+            bottom: { xs: 18, sm: 26 },
             transform: "translateX(-50%)",
             zIndex: 10,
-            gap: 1,
-            px: 2,
+            width: { xs: "calc(100% - 32px)", sm: "auto" },
+            minWidth: { sm: 620 },
+            minHeight: 68,
+            justifyContent: "center",
+            flexWrap: { xs: "wrap", sm: "nowrap" },
+            gap: { xs: 0.5, sm: 1 },
+            paddingInline: { xs: 1, sm: 1.5 },
+            paddingBlock: 1,
+            borderWidth: 1,
+            borderStyle: "solid",
+            borderColor: (t) =>
+              t.alpha(t.palette.primary.contrastText, 0.18),
             borderRadius: 999,
-            bgcolor: (t) => t.palette.primary.main,
+            backgroundColor: (t) => t.alpha(t.palette.primary.dark, 0.84),
             color: (t) => t.palette.primary.contrastText,
-            boxShadow: 6,
+            backdropFilter: "blur(18px)",
+            boxShadow: (t) => t.shadows[16],
           }}
         >
           <Box component="span" data-tour="exercise-back-button">
@@ -496,27 +646,59 @@ function RouteComponent() {
                 color: (t) => t.palette.primary.contrastText,
               }}
             >
-              {`Back`}
+              Back
             </StyledRouterLinkButton>
           </Box>
 
-          <Typography
+          <Divider
+            orientation="vertical"
+            flexItem
+            sx={{
+              display: { xs: "none", sm: "block" },
+              marginBlock: 1,
+              borderColor: (t) =>
+                t.alpha(t.palette.primary.contrastText, 0.16),
+            }}
+          />
+
+          <Stack
             data-tour="timer"
-            sx={{ minWidth: 56, textAlign: "center" }}
+            direction="row"
+            spacing={1}
+            sx={{
+              minWidth: 92,
+              justifyContent: "center",
+              alignItems: "center",
+              paddingInline: 1.5,
+              color: (t) => t.palette.primary.contrastText,
+              opacity: 0.82,
+            }}
           >
-            {formatTimer(timerSeconds)}
-          </Typography>
+            <AccessTimeRounded fontSize="small" />
+            <Typography
+              sx={{
+                minWidth: 48,
+                fontWeight: 700,
+                textAlign: "center",
+                fontVariantNumeric: "tabular-nums",
+                letterSpacing: "0.04em",
+              }}
+            >
+              {formatTimer(timerSeconds)}
+            </Typography>
+          </Stack>
 
           <Button
             data-tour="timer-btn"
             onClick={() => {
               setTimerPaused((value) => !value);
             }}
+            startIcon={timerPaused ? <PlayArrowRounded /> : <PauseRounded />}
             sx={{
               color: (t) => t.palette.primary.contrastText,
             }}
           >
-            {timerPaused ? `Resume` : `Pause`}
+            {timerPaused ? "Resume" : "Pause"}
           </Button>
 
           <Button
@@ -529,11 +711,12 @@ function RouteComponent() {
               setCreatedWindowId(createdWindow.id);
               setCreatedWindowOpen(true);
             }}
+            startIcon={<VideoLibraryRounded />}
             sx={{
               color: (t) => t.palette.primary.contrastText,
             }}
           >
-            {`Reopen player`}
+            Reopen player
           </Button>
         </Toolbar>
       </Box>

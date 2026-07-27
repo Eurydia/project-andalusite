@@ -1,7 +1,7 @@
-import { CssBaseline, ThemeProvider } from "@mui/material";
+import CssBaseline from "@mui/material/CssBaseline";
+import { ThemeProvider } from "@mui/material/styles";
 import { theme } from "@renderer/theme";
 import { createRootRoute, Outlet } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { ToastContainer } from "react-toastify";
 
 export const Route = createRootRoute({
@@ -9,7 +9,6 @@ export const Route = createRootRoute({
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Outlet />
-      <TanStackRouterDevtools />
       <ToastContainer
         autoClose={750}
         stacked

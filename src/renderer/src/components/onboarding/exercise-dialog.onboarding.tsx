@@ -1,4 +1,4 @@
-import { useTheme } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import { type FC, memo, useMemo } from "react";
 import { Joyride, STATUS, type Step } from "react-joyride";
 

@@ -2,7 +2,7 @@
 
 > Powered by [ElectronJS](https://www.electronjs.org/), [ONNX](https://onnx.ai/) and [Ultralytics YOLO11](https://platform.ultralytics.com/).
 
-# ~Andalusite | AI-powered, Fully-offline, Fully-local Yoga Exercise Form Corrector
+# ~Andalusite | AI-powered, Fully-offline, Real-time Yoga Form Correction
 
 _Andalusite_ is a functional prototype for a desktop application that teaches you how to properly perform yoga exercises by providing instant feedback during the session.
 

@@ -12,13 +12,13 @@ Under the hood, it uses a combination of ONNX runtime and a Ultralytics YOLO11 m
 
 ## ~Quick Start
 
-Start by choosing an exericse from our catalogue.
+Start by choosing an exercise from our catalogue.
 
 ![](assets/images/exercise-list.png)
 
 ## ~Briefing and Additional Details Before You Start
 
-Once you have picked an exericse you would like to try, you will be presented with a short briefing on what to expect, as well as, an example on to properly perform this exercise.
+Once you have picked an exercise you would like to try, you will be presented with a short briefing on what to expect, as well as an example of how to properly perform the exercise.
 
 > Even when it is your first time, you will not be going in blind!
 

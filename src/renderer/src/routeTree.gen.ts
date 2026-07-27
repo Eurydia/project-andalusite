@@ -8,70 +8,70 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as ExerciseRouteImport } from './routes/exercise'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as rootRouteImport } from "./routes/__root";
+import { Route as ExerciseRouteImport } from "./routes/exercise";
+import { Route as IndexRouteImport } from "./routes/index";
 
 const ExerciseRoute = ExerciseRouteImport.update({
-  id: '/exercise',
-  path: '/exercise',
+  id: "/exercise",
+  path: "/exercise",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/exercise': typeof ExerciseRoute
+  "/": typeof IndexRoute;
+  "/exercise": typeof ExerciseRoute;
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/exercise': typeof ExerciseRoute
+  "/": typeof IndexRoute;
+  "/exercise": typeof ExerciseRoute;
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/exercise': typeof ExerciseRoute
+  __root__: typeof rootRouteImport;
+  "/": typeof IndexRoute;
+  "/exercise": typeof ExerciseRoute;
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/exercise'
-  fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/exercise'
-  id: '__root__' | '/' | '/exercise'
-  fileRoutesById: FileRoutesById
+  fileRoutesByFullPath: FileRoutesByFullPath;
+  fullPaths: "/" | "/exercise";
+  fileRoutesByTo: FileRoutesByTo;
+  to: "/" | "/exercise";
+  id: "__root__" | "/" | "/exercise";
+  fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  ExerciseRoute: typeof ExerciseRoute
+  IndexRoute: typeof IndexRoute;
+  ExerciseRoute: typeof ExerciseRoute;
 }
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    '/exercise': {
-      id: '/exercise'
-      path: '/exercise'
-      fullPath: '/exercise'
-      preLoaderRoute: typeof ExerciseRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+    "/exercise": {
+      id: "/exercise";
+      path: "/exercise";
+      fullPath: "/exercise";
+      preLoaderRoute: typeof ExerciseRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/": {
+      id: "/";
+      path: "/";
+      fullPath: "/";
+      preLoaderRoute: typeof IndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ExerciseRoute: ExerciseRoute,
-}
+};
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+  ._addFileTypes<FileRouteTypes>();

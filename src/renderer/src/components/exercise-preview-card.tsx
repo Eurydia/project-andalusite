@@ -1,20 +1,20 @@
-import Card from '@mui/material/Card'
-import CardActionArea from '@mui/material/CardActionArea'
-import CardHeader from '@mui/material/CardHeader'
-import CardMedia from '@mui/material/CardMedia'
-import { ExerciseData } from '@renderer/types'
-import { FC, useState } from 'react'
-import { DifficultyBadge } from './difficulty-badge'
-import { ExerciseDialog } from './exercise-dialog'
+import Card from "@mui/material/Card";
+import CardActionArea from "@mui/material/CardActionArea";
+import CardHeader from "@mui/material/CardHeader";
+import CardMedia from "@mui/material/CardMedia";
+import type { ExerciseData } from "@renderer/types";
+import { type FC, useState } from "react";
+import { DifficultyBadge } from "./difficulty-badge";
+import { ExerciseDialog } from "./exercise-dialog";
 
 export const ExercisePreviewCard: FC<{
-  data: ExerciseData
+  data: ExerciseData;
   onboarding: {
-    shouldRun: boolean
-    onFinished: () => unknown
-  }
+    shouldRun: boolean;
+    onFinished: () => unknown;
+  };
 }> = (props) => {
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
     <>
@@ -27,22 +27,22 @@ export const ExercisePreviewCard: FC<{
           <CardMedia
             image={props.data.thumbnailSrc}
             sx={{
-              objectFit: 'contain',
+              objectFit: "contain",
               backgroundColor: (t) => t.palette.primary.light,
-              aspectRatio: '16/10'
+              aspectRatio: "16/10",
             }}
           />
           <CardHeader
-            title={`${props.data.name}${props.data.soon ? ` (coming soon!)` : ''}`}
+            title={`${props.data.name}${props.data.soon ? ` (coming soon!)` : ""}`}
             subheader={<DifficultyBadge variant={props.data.difficulty} />}
             slotProps={{
               title: {
                 sx: {
-                  overflowWrap: 'break-word',
-                  wordBreak: 'break-word',
-                  fontWeight: 700
-                }
-              }
+                  overflowWrap: "break-word",
+                  wordBreak: "break-word",
+                  fontWeight: 700,
+                },
+              },
             }}
           />
         </CardActionArea>
@@ -56,5 +56,5 @@ export const ExercisePreviewCard: FC<{
         />
       )}
     </>
-  )
-}
+  );
+};

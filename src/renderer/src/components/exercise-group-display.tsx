@@ -1,15 +1,15 @@
-import { Grid } from '@mui/material'
-import { ExerciseData } from '@renderer/types'
-import { FC } from 'react'
-import { ExercisePreviewCard } from './exercise-preview-card'
+import { Grid } from "@mui/material";
+import type { ExerciseData } from "@renderer/types";
+import type { FC } from "react";
+import { ExercisePreviewCard } from "./exercise-preview-card";
 
 export const ExerciseGroupDisplay: FC<{
-  items: Array<ExerciseData>
-  idPrefix: string
+  items: Array<ExerciseData>;
+  idPrefix: string;
   onboarding: {
-    shouldRun: boolean
-    onFinished: () => unknown
-  }
+    shouldRun: boolean;
+    onFinished: () => unknown;
+  };
 }> = (props) => (
   <Grid container spacing={4}>
     {props.items.map((item, i) => {
@@ -19,7 +19,7 @@ export const ExerciseGroupDisplay: FC<{
             <ExercisePreviewCard data={item} onboarding={props.onboarding} />
           </div>
         </Grid>
-      )
+      );
     })}
   </Grid>
-)
+);

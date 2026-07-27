@@ -1,47 +1,47 @@
-import { ExerciseData } from '@renderer/types'
+import type { ExerciseData } from "@renderer/types";
 
 export const BASIC_EXERCISES: Array<ExerciseData> = [
   {
-    name: 'Squat',
-    difficulty: 'BASIC',
+    name: "Squat",
+    difficulty: "BASIC",
     explanation: `
 
 A squat is a lower-body exercise that strengthens the legs, hips, and core. During a squat, you bend your knees and lower your hips as if sitting in a chair, then return to a standing position. 
 
 **Common Pain Areas Caused by Wrong Squat Form**
 
-1\. Knee Pain   
-2\. Lower Back Pain   
-3\. Hip Pain   
-4\. Ankle Pain   
-5\. Groin Pain
+1. Knee Pain   
+2. Lower Back Pain   
+3. Hip Pain   
+4. Ankle Pain   
+5. Groin Pain
 
 **Tips to Prevent Pain**
 
-1\. Warm up before exercising  
-2\. Improve ankle and hip mobility  
-3\. Strengthen core muscles  
-4\. Start with bodyweight squats before adding weight  
-5\. Practice proper technique slowly  
-6\. Stop if you feel sharp pain`,
-    exerciseId: 'squat',
-    thumbnailSrc: './assets/images/squat.png',
-    videoSrc: './assets/videos/squat.mp4'
+1. Warm up before exercising  
+2. Improve ankle and hip mobility  
+3. Strengthen core muscles  
+4. Start with bodyweight squats before adding weight  
+5. Practice proper technique slowly  
+6. Stop if you feel sharp pain`,
+    exerciseId: "squat",
+    thumbnailSrc: "./assets/images/squat.png",
+    videoSrc: "./assets/videos/squat.mp4",
   },
   {
-    name: 'Plank',
-    difficulty: 'BASIC',
+    name: "Plank",
+    difficulty: "BASIC",
     explanation: `
   A plank is a core-strengthening exercise that helps improve stability, balance, posture, and overall body strength. It is performed by holding the body in a straight line while supporting yourself on the forearms or hands and toes.
   
   **Common Pain Areas Caused by Wrong Plank Form**  
   
-  1\. Lower Back Pain  
-  2\. Shoulder Pain  
-  3\. Neck Pain  
-  4\. Wrist Pain  
-  5\. Hip Pain  
-  6\. Elbow Pain
+  1. Lower Back Pain  
+  2. Shoulder Pain  
+  3. Neck Pain  
+  4. Wrist Pain  
+  5. Hip Pain  
+  6. Elbow Pain
   
   **Tips for a Safe and Effective Plank**
   
@@ -53,30 +53,30 @@ A squat is a lower-body exercise that strengthens the legs, hips, and core. Duri
   6. Breathe normally and avoid holding your breath
   7. Stop if you feel sharp pain in the back, shoulders, or wrists
   8. Practice regularly to improve endurance and stability`,
-    exerciseId: 'plank',
-    thumbnailSrc: './assets/images/plank.png',
-    videoSrc: './assets/videos/plank.mp4'
+    exerciseId: "plank",
+    thumbnailSrc: "./assets/images/plank.png",
+    videoSrc: "./assets/videos/plank.mp4",
   },
   {
     soon: true,
-    difficulty: 'BASIC',
-    name: 'Glute bridge',
-    thumbnailSrc: './assets/images/glute-bridge.png'
-  }
-]
+    difficulty: "BASIC",
+    name: "Glute bridge",
+    thumbnailSrc: "./assets/images/glute-bridge.png",
+  },
+];
 
 export const INTERMEDIATE_EXERCISES: Array<ExerciseData> = [
   {
-    name: 'Downward Facing Dog',
-    difficulty: 'INTERMEDIATE',
+    name: "Downward Facing Dog",
+    difficulty: "INTERMEDIATE",
     explanation: `
 Downward Facing Dog is a popular yoga pose that stretches and strengthens the whole body, especially the shoulders, back, hamstrings, and calves. In this pose, the body forms an inverted “V” shape.
 
 **Common Pain Areas Caused by Wrong Downward Facing Dog Form**  
-1\. Wrist Pain  
-2\. Shoulder Pain  
-3\. Lower Back Pain  
-4\. Neck Pain
+1. Wrist Pain  
+2. Shoulder Pain  
+3. Lower Back Pain  
+4. Neck Pain
 
 **Tips for a Safe and Effective Downward Facing Dog**
 
@@ -89,41 +89,41 @@ Downward Facing Dog is a popular yoga pose that stretches and strengthens the wh
 7. Warm up wrists and shoulders before practice
 8. Stop if you feel sharp pain in the wrists, shoulders, or lower back
 `,
-    exerciseId: 'downward-dog',
-    thumbnailSrc: './assets/images/downward-dog.png',
-    videoSrc: './assets/videos/downward-dog.mp4'
+    exerciseId: "downward-dog",
+    thumbnailSrc: "./assets/images/downward-dog.png",
+    videoSrc: "./assets/videos/downward-dog.mp4",
   },
   {
     soon: true,
-    name: 'Lunge',
-    difficulty: 'INTERMEDIATE',
-    thumbnailSrc: './assets/images/lunge.png'
+    name: "Lunge",
+    difficulty: "INTERMEDIATE",
+    thumbnailSrc: "./assets/images/lunge.png",
   },
   {
     soon: true,
-    name: 'Side Plank',
-    difficulty: 'INTERMEDIATE',
-    thumbnailSrc: './assets/images/side-plank.png'
-  }
-]
+    name: "Side Plank",
+    difficulty: "INTERMEDIATE",
+    thumbnailSrc: "./assets/images/side-plank.png",
+  },
+];
 
 export const ADVANCED_EXERCISES: Array<ExerciseData> = [
   {
     soon: true,
-    difficulty: 'ADVANCED',
-    name: 'Pistol Squat',
-    thumbnailSrc: './assets/images/pistol-squat.png'
+    difficulty: "ADVANCED",
+    name: "Pistol Squat",
+    thumbnailSrc: "./assets/images/pistol-squat.png",
   },
   {
     soon: true,
-    difficulty: 'ADVANCED',
-    name: 'Crow pose',
-    thumbnailSrc: './assets/images/crow-pose.png'
+    difficulty: "ADVANCED",
+    name: "Crow pose",
+    thumbnailSrc: "./assets/images/crow-pose.png",
   },
   {
     soon: true,
-    difficulty: 'ADVANCED',
-    name: 'Handstand',
-    thumbnailSrc: './assets/images/handstand.png'
-  }
-]
+    difficulty: "ADVANCED",
+    name: "Handstand",
+    thumbnailSrc: "./assets/images/handstand.png",
+  },
+];

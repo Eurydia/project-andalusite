@@ -7,11 +7,13 @@ import {
   DialogTitle,
   Link,
   Stack,
-  Typography
-} from '@mui/material'
-import { FC } from 'react'
+  Typography,
+} from "@mui/material";
+import type { FC } from "react";
 
-export const AboutAppDialog: FC<{ open: boolean; onClose: () => unknown }> = (props) => {
+export const AboutAppDialog: FC<{ open: boolean; onClose: () => unknown }> = (
+  props,
+) => {
   return (
     <>
       <Dialog open={props.open} onClose={props.onClose} maxWidth="sm" fullWidth>
@@ -20,9 +22,10 @@ export const AboutAppDialog: FC<{ open: boolean; onClose: () => unknown }> = (pr
         <DialogContent>
           <Stack spacing={2}>
             <DialogContentText>
-              YogaCorrect is a desktop yoga training app that helps users follow structured practice
-              sessions, view exercise previews, track session time, and receive webcam-based pose
-              feedback during workouts.
+              YogaCorrect is a desktop yoga training app that helps users follow
+              structured practice sessions, view exercise previews, track
+              session time, and receive webcam-based pose feedback during
+              workouts.
             </DialogContentText>
 
             <Stack spacing={0.5}>
@@ -35,16 +38,17 @@ export const AboutAppDialog: FC<{ open: boolean; onClose: () => unknown }> = (pr
             <Stack spacing={0.5}>
               <Typography variant="subtitle2">Core Features</Typography>
               <Typography variant="body2" color="text.secondary">
-                Guided yoga routines, exercise previews, session timer, pause and resume controls,
-                webcam pose tracking, feedback sounds, and progress review.
+                Guided yoga routines, exercise previews, session timer, pause
+                and resume controls, webcam pose tracking, feedback sounds, and
+                progress review.
               </Typography>
             </Stack>
 
             <Stack spacing={0.5}>
               <Typography variant="subtitle2">Built For</Typography>
               <Typography variant="body2" color="text.secondary">
-                Home practice, beginner-friendly routines, posture awareness, and consistent daily
-                movement.
+                Home practice, beginner-friendly routines, posture awareness,
+                and consistent daily movement.
               </Typography>
             </Stack>
 
@@ -57,7 +61,12 @@ export const AboutAppDialog: FC<{ open: boolean; onClose: () => unknown }> = (pr
 
             <Stack spacing={0.5}>
               <Typography variant="subtitle2">Website</Typography>
-              <Link href="about:blank" target="_blank" rel="noreferrer" underline="hover">
+              <Link
+                href="about:blank"
+                target="_blank"
+                rel="noreferrer"
+                underline="hover"
+              >
                 https://yogacorret.ai
               </Link>
             </Stack>
@@ -69,5 +78,5 @@ export const AboutAppDialog: FC<{ open: boolean; onClose: () => unknown }> = (pr
         </DialogActions>
       </Dialog>
     </>
-  )
-}
+  );
+};
